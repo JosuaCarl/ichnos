@@ -367,15 +367,19 @@ def main(arguments):
 
     if check_reserved_memory_flag:
         total_res_mem_energy = 0
+        total_res_mem_emissions = 0
 
-        for realtime, ci in node_memory_usage:
+        for realtime, ci_val in node_memory_usage:
             res_mem_energy = (arguments[RESERVED_MEMORY] * memory_coefficient * realtime * 0.001) * arguments[NUM_OF_NODES]  # convert from W to kW
             total_res_mem_energy += res_mem_energy
+            total_res_mem_emissions += res_mem_energy * ci_val
 
         total_energy = total_res_mem_energy + ccf_energy + ccf_memory
         res_report = f"Reserved Memory Energy Consumption: {total_res_mem_energy}kWh"
+        res_ems_report = f"Reserved Memory Carbon Emissions: {total_res_mem_emissions}gCO2e"
         energy_split_report = f"% CPU [{((ccf_energy / total_energy) * 100):.2f}%] | % Memory [{(((total_res_mem_energy + ccf_memory) / total_energy) * 100):.2f}%]"
         summary += f"{res_report}\n"
+        summary += f"{res_ems_report}\n"
         summary += f"{energy_split_report}\n"
         print(res_report)
         print(energy_split_report)
