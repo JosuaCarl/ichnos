@@ -23,6 +23,7 @@ DEFAULT_PUE_VALUE = 1.0  # Disregard PUE if 1.0
 DEFAULT_MEMORY_POWER_DRAW = 0.392  # W/GB
 RESERVED_MEMORY = "reserved-memory"
 NUM_OF_NODES = "num-of-nodes"
+TASK_FLAG = True
 
 
 # Functions
@@ -383,6 +384,17 @@ def main(arguments):
         summary += f"{energy_split_report}\n"
         print(res_report)
         print(energy_split_report)
+
+    if TASK_FLAG:
+        time = 0
+
+        for _, tasks in tasks_by_hour.items():
+            for task in tasks:
+                time += task.get_realtime()
+
+        hours = time
+        summary += f"\nTask Runtime: {hours}ms\n"
+
 
     # Report Summary
     if isinstance(ci, float):
