@@ -151,7 +151,9 @@ def to_closest_hour_ms(original):
 
     if ts.minute >= 30:
         if ts.hour + 1 == 24:
-            ts = ts.replace(hour=0, minute=0, second=0, microsecond=0, day=ts.day+1)
+            # ts = ts.replace(hour=0, minute=0, second=0, microsecond=0, day=ts.day+1)
+            ts = ts + time.timedelta(days=1)
+            ts = ts.replace(hour=0, minute=0, second=0, microsecond=0)
         else:
             ts = ts.replace(second=0, microsecond=0, minute=0, hour=ts.hour+1)
     else:

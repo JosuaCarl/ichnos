@@ -61,7 +61,10 @@ class TraceRecord:
                 else:
                     value = int(value)
             elif field == "rss":
-                value = float(value)
+                if value == '-':
+                    value = None
+                else:
+                    value = float(value)
 
             raw[field] = value
     
