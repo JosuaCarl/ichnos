@@ -381,7 +381,7 @@ def main(arguments):
         res_report = f"Reserved Memory Energy Consumption: {total_res_mem_energy}kWh"
         res_ems_report = f"Reserved Memory Carbon Emissions: {total_res_mem_emissions}gCO2e"
         energy_split_report = f"% CPU [{((ccf_energy / total_energy) * 100):.2f}%] | % Memory [{(((total_res_mem_energy + ccf_memory) / total_energy) * 100):.2f}%]"
-        summary += f"{res_report}\n"
+        summary += f"\n{res_report}\n"
         summary += f"{res_ems_report}\n"
         summary += f"{energy_split_report}\n"
         print(res_report)
