@@ -76,6 +76,24 @@ Overall:
 - Carbon Emissions: 1823.514361925256gCO2e
 ```
 
+## 📖 Publications
+
+If you use Ichnos in your research, please cite our paper:
+
+Kathleen West, Yehia Elkhatib and Lauritz Thamsen. "[Ichnos: A Carbon Footprint Estimator for Scientific Workflows](https://arxiv.org/abs/2411.12456)" Extended Abstract for *1st International Workshop on Low Carbon Computing (LOCO24)*. 2024
+
+Bibtex:
+```
+@misc{west2024ichnoscarbonfootprintestimator,
+      title={Ichnos: A Carbon Footprint Estimator for Scientific Workflows}, 
+      author={Kathleen West and Yehia Elkhatib and Lauritz Thamsen},
+      year={2024},
+      eprint={2411.12456},
+      url={https://arxiv.org/abs/2411.12456}, 
+}
+```
+
+
 # Credits
 - [Carbon Footprint](src/scripts/CarbonFootprint.py) is adapted from the [nf-co2footprint](https://github.com/nextflow-io/nf-co2footprint) plugin which was based on the carbon footprint computation method developed in the [Green Algorithms](https://www.green-algorithms.org/) project. 
   > **Green Algorithms: Quantifying the Carbon Footprint of Computation.**
