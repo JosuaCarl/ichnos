@@ -2,13 +2,11 @@
 A project with scripts to methodically calculate the Carbon Footprint of Workflow Executions from Nextflow trace files.
 
 # Usage
-For the initial version, replicating the previous calculation approach noted in the Credits section, example usage has been provided with default values:
+For the current version, replicating the previous calculation approach noted in the Credits section, example usage has been provided with default values:
 ```
-$ python -m src.scripts.CarbonFootprint <trace-file-name> <carbon-intensity> <power-usage-effectiveness> <cpu-power-draw> <memory-power-draw> <config-profile>"  
-$ python -m src.scripts.CarbonFootprint test 475 1.67 12 0.3725 default
-```    
-Configuration Profiles are available and can be adjusted - see the [trace config](config/trace.conf) - default refers to a csv file.   
-Future plans will look at using CI values based on the time interval that the trace was executed in, and inclusion of variable cpu and memory power draw values. 
+$ python -m src.scripts.CarbonFootprint <trace-name> <ci-value|ci-file-name> <min-watts> <max-watts> <? pue=1.0> <? memory-coeff=0.392>
+$ python -m src.scripts.CarbonFootprint test 475 60 120 1.67 12 0.3725
+```      
 
 > **Note**  
 > The trace file name must be the file name only, and traces should be csv files stored in the [data trace](data/trace/) directory!
@@ -74,6 +72,23 @@ Overall:
 - Memory Energy Consumption (exc. PUE): 4.100691780370434kWh
 - Memory Energy Consumption (inc. PUE): 6.848155273218615kWh
 - Carbon Emissions: 1823.514361925256gCO2e
+```
+
+## 📖 Publications
+
+If you use Ichnos in your research, please cite our paper:
+
+Kathleen West, Yehia Elkhatib and Lauritz Thamsen. "[Ichnos: A Carbon Footprint Estimator for Scientific Workflows](https://arxiv.org/abs/2411.12456)" Extended Abstract for *1st International Workshop on Low Carbon Computing (LOCO24)*. 2024
+
+Bibtex:
+```
+@misc{west2024ichnoscarbonfootprintestimator,
+      title={Ichnos: A Carbon Footprint Estimator for Scientific Workflows}, 
+      author={Kathleen West and Yehia Elkhatib and Lauritz Thamsen},
+      year={2024},
+      eprint={2411.12456},
+      url={https://arxiv.org/abs/2411.12456}, 
+}
 ```
 
 # Credits
