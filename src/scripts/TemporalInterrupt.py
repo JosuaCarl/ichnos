@@ -325,7 +325,7 @@ def explore_temporal_shifting_for_workflow(workflow, tasks_by_hour, ci, min_watt
 
         saving = ((orig_carbon_emissions - carbon_emissions) / orig_carbon_emissions) * 100
 
-        output.append(f'{saving:.1f}%:{carbon_emissions}:{overhead / 1000}')
+        output.append(f'{saving:.1f}%:{carbon_emissions}:{overhead / 1000}')  # reports overhead in seconds
 
     return ','.join(output)
 
