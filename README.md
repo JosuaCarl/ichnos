@@ -91,7 +91,7 @@ Bibtex:
 }
 ```
 
-# Credits
+## Credits
 - [Carbon Footprint](src/scripts/CarbonFootprint.py) is adapted from the [nf-co2footprint](https://github.com/nextflow-io/nf-co2footprint) plugin which was based on the carbon footprint computation method developed in the [Green Algorithms](https://www.green-algorithms.org/) project. 
   > **Green Algorithms: Quantifying the Carbon Footprint of Computation.**
   > Lannelongue, L., Grealey, J., Inouye, M.,

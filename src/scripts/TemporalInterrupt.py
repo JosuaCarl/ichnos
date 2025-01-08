@@ -11,40 +11,33 @@ DEFAULT = "default"
 FILE = "csv"
 DELIMITER = ","
 WORKFLOWS_M = [
-    'mag-orig-ceph-1', 
-    'mag-orig-ceph-2', 
-    'mag-orig-ceph-3',
-    'rangeland-orig-ceph-1', 
-    'rangeland-orig-ceph-2', 
-    'rangeland-orig-ceph-3',
+    'mag-1', 
+    'mag-2', 
+    'mag-3',
+    'rangeland-1', 
+    'rangeland-2', 
+    'rangeland-3'
 ]
 WORKFLOWS_W_N = [
-    'chipseq-orig-ceph-1', 
-    'chipseq-orig-ceph-2', 
-    'chipseq-orig-ceph-3',
-    'chipseq-orig-nfs-1', 
-    'chipseq-orig-nfs-2', 
-    'chipseq-orig-nfs-3',
-    'rnaseq-orig-ceph-1', 
-    'rnaseq-orig-ceph-2', 
-    'rnaseq-orig-ceph-3',
-    'rnaseq-orig-nfs-1', 
-    'rnaseq-orig-nfs-2', 
-    'rnaseq-orig-nfs-3',
-    'sarek-orig-ceph-1', 
-    'sarek-orig-ceph-2', 
-    'sarek-orig-ceph-3',
-    'sarek-orig-nfs-1', 
-    'sarek-orig-nfs-2', 
-    'sarek-orig-nfs-3',
+    'chipseq-1', 
+    'chipseq-2', 
+    'chipseq-3',
+    'rnaseq-1', 
+    'rnaseq-2', 
+    'rnaseq-3',
+    'sarek-1', 
+    'sarek-2', 
+    'sarek-3'
 ]
 WORKFLOWS_W_M = [
-    'montage-orig-ceph-1', 
-    'montage-orig-ceph-2', 
-    'montage-orig-ceph-3',
-    'montage-orig-nfs-1', 
-    'montage-orig-nfs-2', 
-    'montage-orig-nfs-3',
+    'montage-1', 
+    'montage-2', 
+    'montage-3'
+]
+WORKFLOWS_S = [
+    'nanoseq-1',
+    'nanoseq-2',
+    'nanoseq-3'
 ]
 
 
@@ -94,6 +87,10 @@ def parse_trace_file(filepath):
         records.append(trace_record)
 
     return records
+
+
+def linear_power_model(cpu_usage, min_watts, max_watts):
+    return min_watts + cpu_usage * (max_watts - min_watts)
 
 
 def print_usage_exit():
@@ -217,9 +214,9 @@ def calculate_carbon_footprint_for_task(task: CarbonRecord, min_watts, max_watts
     # CPU Usage (%)
     cpu_usage = task.get_cpu_usage() / (100.0 * no_cores)
     # Memory (GB)
-    memory = task.get_memory() / 1000000000  # bytes to GB
+    memory = task.get_memory() / 1073741824  # bytes to GB
     # Core Energy Consumption (without PUE)
-    core_consumption = time * (min_watts + cpu_usage * (max_watts - min_watts)) * 0.001  # convert from W to kW
+    core_consumption = time * linear_power_model(cpu_usage, min_watts, max_watts) * 0.001  # convert from W to kW
     # Memory Power Consumption (without PUE)
     memory_consumption = memory * memory_coefficient * time * 0.001  # convert from W to kW
     # Overall and Memory Consumption (kW) (without PUE)
@@ -328,7 +325,7 @@ def explore_temporal_shifting_for_workflow(workflow, tasks_by_hour, ci, min_watt
 
         saving = ((orig_carbon_emissions - carbon_emissions) / orig_carbon_emissions) * 100
 
-        output.append(f'{saving:.1f}%:{carbon_emissions}:{overhead / 1000}')
+        output.append(f'{saving:.1f}%:{carbon_emissions}:{overhead / 1000}')  # reports overhead in seconds
 
     return ','.join(output)
 
@@ -364,4 +361,4 @@ if __name__ == '__main__':
     max_watts = int(arguments[4])
     ci = parse_ci_intervals(ci_filename)
 
-    main(WORKFLOWS_M, ci, min_watts, max_watts, pue, memory_coefficient)
+    main(WORKFLOWS_S, ci, min_watts, max_watts, pue, memory_coefficient)

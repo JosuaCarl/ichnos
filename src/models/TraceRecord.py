@@ -43,21 +43,13 @@ class TraceRecord:
         for field, value in zip(fields.split(delimiter), data.split(delimiter)):
             value = value.strip()
 
-            if field == "memory":  # format x GB|MB|KB
-                parts = value.split(" ")
-                if len(parts) == 1:
-                    value = float(parts[0][:-1]) / 1000000
-                elif parts[1] == "GB":
-                    value = int(parts[0])
-                elif parts[1] == "MB":
-                    value = int(parts[0]) / 1000
-                elif parts[1] == "KB":
-                    value = int(parts[0]) / 1000000
-            # elif field == "start" or field == "complete":  # format yyyy-mm-dd hh:mm:ss.mss
-            #     value = datetime.strptime(value, "%Y-%m-%d %H:%M:%S.%f")
-            elif field == "duration" or field == "realtime":  # format (xh) (ym) (zs)
-                parts = value.split(" ")
-                value = float(value.strip())
+            if field == "memory":  
+                if value == '-':
+                    value = None
+                else:
+                    value = float(value)
+            elif field == "duration" or field == "realtime":  
+                value = float(value)
             elif field == "%cpu":  # format x.y%
                 if value[:-1] == '':
                     value = 0.0
@@ -68,8 +60,18 @@ class TraceRecord:
                     value = 1
                 else:
                     value = int(value)
+            elif field == "rss":
+                if value == '-':
+                    value = None
+                else:
+                    value = float(value)
 
             raw[field] = value
+    
+        # where memory is not set, use rss (the amount of space of physical memory (RAM) held by a process)
+        # further info: https://www.nextflow.io/docs/latest/metrics.html
+        if raw['memory'] is None and 'rss' in raw:
+            raw['memory'] = raw['rss']
 
         return raw 
 

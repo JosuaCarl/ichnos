@@ -1,3 +1,7 @@
 # Python Files
 *__init__.py
 *__pycache__/
+
+# Project Specific Files
+*-marg*
+data/raw-traces/

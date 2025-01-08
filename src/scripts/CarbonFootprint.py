@@ -21,6 +21,9 @@ CCF = "CCF"
 BOTH = "BOTH"
 DEFAULT_PUE_VALUE = 1.0  # Disregard PUE if 1.0
 DEFAULT_MEMORY_POWER_DRAW = 0.392  # W/GB
+RESERVED_MEMORY = "reserved-memory"
+NUM_OF_NODES = "num-of-nodes"
+TASK_FLAG = True
 
 
 # Functions
@@ -79,7 +82,7 @@ def parse_trace_file(filepath):
 
 
 def print_usage_exit():
-    usage = "Ichnos (Linear): python -m src.scripts.CarbonFootprint <trace-name> <ci-value|ci-file-name> <min-watts> <max-watts> <? pue=1.0> <? memory-coeff=0.392>"
+    usage = "Ichnos: python -m src.scripts.CarbonFootprint <trace-name> <ci-value|ci-file-name> <min-watts> <max-watts> <? pue=1.0> <? memory-coeff=0.392>"
     print(usage)
     exit(-1)
 
@@ -148,7 +151,9 @@ def to_closest_hour_ms(original):
 
     if ts.minute >= 30:
         if ts.hour + 1 == 24:
-            ts = ts.replace(hour=0, minute=0, second=0, microsecond=0, day=ts.day+1)
+            # ts = ts.replace(hour=0, minute=0, second=0, microsecond=0, day=ts.day+1)
+            ts = ts + time.timedelta(days=1)
+            ts = ts.replace(hour=0, minute=0, second=0, microsecond=0)
         else:
             ts = ts.replace(second=0, microsecond=0, minute=0, hour=ts.hour+1)
     else:
@@ -206,13 +211,14 @@ def estimate_task_energy_consumption_ccf(task: CarbonRecord, min_watts, max_watt
 
 
 # Estimate Carbon Footprint using CCF Methodology
-def calculate_carbon_footprint_ccf(tasks_by_hour, ci, pue: float, min_watts, max_watts, memory_coefficient):
+def calculate_carbon_footprint_ccf(tasks_by_hour, ci, pue: float, min_watts, max_watts, memory_coefficient, check_node_memory=False):
     total_energy = 0.0
     total_energy_pue = 0.0
     total_memory_energy = 0.0
     total_memory_energy_pue = 0.0
     total_carbon_emissions = 0.0
     records = []
+    node_memory_used = []
 
     for hour, tasks in tasks_by_hour.items():
         if len(tasks) > 0:
@@ -220,12 +226,25 @@ def calculate_carbon_footprint_ccf(tasks_by_hour, ci, pue: float, min_watts, max
                 ci_val = ci
             else:
                 hour_ts = to_timestamp(hour)
+                hh = str(hour_ts.hour).zfill(2)
                 month = str(hour_ts.month).zfill(2)
                 day = str(hour_ts.day).zfill(2)
-                hh = str(hour_ts.hour).zfill(2)
                 mm = str(hour_ts.minute).zfill(2)
                 ci_key = f'{month}/{day}-{hh}:{mm}'
                 ci_val = ci[ci_key] 
+
+            if check_node_memory:
+                starts = []
+                ends = []
+
+                for task in tasks:
+                    starts.append(int(task.get_start()))
+                    ends.append(int(task.get_complete()))
+
+                earliest = min(starts)
+                latest = max(ends)
+                realtime = (latest - earliest) / 1000 / 3600  # convert from ms to h 
+                node_memory_used.append((realtime, ci_val))
 
             for task in tasks:
                 (energy, memory) = estimate_task_energy_consumption_ccf(task, min_watts, max_watts, memory_coefficient)
@@ -242,7 +261,7 @@ def calculate_carbon_footprint_ccf(tasks_by_hour, ci, pue: float, min_watts, max
                 total_carbon_emissions += task_footprint
                 records.append(task)
 
-    return ((total_energy, total_energy_pue, total_memory_energy, total_memory_energy_pue, total_carbon_emissions), records)
+    return ((total_energy, total_energy_pue, total_memory_energy, total_memory_energy_pue, total_carbon_emissions, node_memory_used), records)
 
 
 def get_hours(arr):
@@ -264,7 +283,7 @@ def check_if_float(value):
 
 
 def parse_arguments(args):
-    if len(args) != 4 and len(args) != 6:
+    if len(args) != 4 and len(args) != 6 and len(args) != 8:
         print_usage_exit()
 
     arguments = {}
@@ -281,6 +300,11 @@ def parse_arguments(args):
     if len(args) == 6:
         arguments[PUE] = float(args[4])
         arguments[MEMORY_COEFFICIENT] = float(args[5])
+    elif len(args) == 8:
+        arguments[PUE] = float(args[4])
+        arguments[MEMORY_COEFFICIENT] = float(args[5])
+        arguments[RESERVED_MEMORY] = float(args[6])
+        arguments[NUM_OF_NODES] = int(args[7])
     else:
         arguments[PUE] = DEFAULT_PUE_VALUE
         arguments[MEMORY_COEFFICIENT] = DEFAULT_MEMORY_POWER_DRAW
@@ -330,8 +354,10 @@ def main(arguments):
         ci_filename = f"data/intensity/{arguments[CI]}.{FILE}"
         ci = parse_ci_intervals(ci_filename)
 
-    (ccf, records) = calculate_carbon_footprint_ccf(tasks_by_hour, ci, pue, min_watts, max_watts, memory_coefficient)
-    ccf_energy, ccf_energy_pue, ccf_memory, ccf_memory_pue, ccf_carbon_emissions = ccf
+    check_reserved_memory_flag = RESERVED_MEMORY in arguments
+
+    (ccf, records) = calculate_carbon_footprint_ccf(tasks_by_hour, ci, pue, min_watts, max_watts, memory_coefficient, check_reserved_memory_flag)
+    ccf_energy, ccf_energy_pue, ccf_memory, ccf_memory_pue, ccf_carbon_emissions, node_memory_usage = ccf
 
     summary += "\nCloud Carbon Footprint Method:\n"
     summary += f"- Energy Consumption (exc. PUE): {ccf_energy}kWh\n"
@@ -341,6 +367,36 @@ def main(arguments):
     summary += f"- Carbon Emissions: {ccf_carbon_emissions}gCO2e"
 
     print(f"Carbon Emissions (CCF): {ccf_carbon_emissions}gCO2e")
+
+    if check_reserved_memory_flag:
+        total_res_mem_energy = 0
+        total_res_mem_emissions = 0
+
+        for realtime, ci_val in node_memory_usage:
+            res_mem_energy = (arguments[RESERVED_MEMORY] * memory_coefficient * realtime * 0.001) * arguments[NUM_OF_NODES]  # convert from W to kW
+            total_res_mem_energy += res_mem_energy
+            total_res_mem_emissions += res_mem_energy * ci_val
+
+        total_energy = total_res_mem_energy + ccf_energy + ccf_memory
+        res_report = f"Reserved Memory Energy Consumption: {total_res_mem_energy}kWh"
+        res_ems_report = f"Reserved Memory Carbon Emissions: {total_res_mem_emissions}gCO2e"
+        energy_split_report = f"% CPU [{((ccf_energy / total_energy) * 100):.2f}%] | % Memory [{(((total_res_mem_energy + ccf_memory) / total_energy) * 100):.2f}%]"
+        summary += f"\n{res_report}\n"
+        summary += f"{res_ems_report}\n"
+        summary += f"{energy_split_report}\n"
+        print(res_report)
+        print(energy_split_report)
+
+    if TASK_FLAG:
+        time = 0
+
+        for _, tasks in tasks_by_hour.items():
+            for task in tasks:
+                time += task.get_realtime()
+
+        hours = time
+        summary += f"\nTask Runtime: {hours}ms\n"
+
 
     # Report Summary
     if isinstance(ci, float):
@@ -364,3 +420,4 @@ if __name__ == '__main__':
     # Parse Arguments
     args = sys.argv[1:]
     arguments = parse_arguments(args)
+    main(arguments)

@@ -136,6 +136,9 @@ def plot_task_timeline(tasks):
     ax.set_xticks(ticks)
     ax.set_xticklabels(ticklabels)
 
+    # report workflow length in seconds
+    print(f"workflow {round((latest - earliest) / 1000)} seconds")
+
     plt.show()
 
     return tasks_by_hour
