@@ -2,13 +2,11 @@
 A project with scripts to methodically calculate the Carbon Footprint of Workflow Executions from Nextflow trace files.
 
 # Usage
-For the initial version, replicating the previous calculation approach noted in the Credits section, example usage has been provided with default values:
+For the current version, replicating the previous calculation approach noted in the Credits section, example usage has been provided with default values:
 ```
-$ python -m src.scripts.CarbonFootprint <trace-file-name> <carbon-intensity> <power-usage-effectiveness> <cpu-power-draw> <memory-power-draw> <config-profile>"  
-$ python -m src.scripts.CarbonFootprint test 475 1.67 12 0.3725 default
-```    
-Configuration Profiles are available and can be adjusted - see the [trace config](config/trace.conf) - default refers to a csv file.   
-Future plans will look at using CI values based on the time interval that the trace was executed in, and inclusion of variable cpu and memory power draw values. 
+$ python -m src.scripts.CarbonFootprint <trace-name> <ci-value|ci-file-name> <min-watts> <max-watts> <? pue=1.0> <? memory-coeff=0.392>
+$ python -m src.scripts.CarbonFootprint test 475 60 120 1.67 12 0.3725
+```      
 
 > **Note**  
 > The trace file name must be the file name only, and traces should be csv files stored in the [data trace](data/trace/) directory!
@@ -93,8 +91,7 @@ Bibtex:
 }
 ```
 
-
-# Credits
+## Credits
 - [Carbon Footprint](src/scripts/CarbonFootprint.py) is adapted from the [nf-co2footprint](https://github.com/nextflow-io/nf-co2footprint) plugin which was based on the carbon footprint computation method developed in the [Green Algorithms](https://www.green-algorithms.org/) project. 
   > **Green Algorithms: Quantifying the Carbon Footprint of Computation.**
   > Lannelongue, L., Grealey, J., Inouye, M.,
