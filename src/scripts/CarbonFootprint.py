@@ -31,7 +31,17 @@ def linear_power_model(cpu_usage, min_watts, max_watts):
     return min_watts + cpu_usage * (max_watts - min_watts)
 
 
-# todo: timezone conversion for non-utc times
+# map from argument to power model
+def get_power_model(model_name):
+    models = {
+        "linear": linear_power_model, 
+
+    }
+
+    if model_name not in models:
+        return linear_power_model
+    else:
+        return models[model_name]
 
 
 def to_timestamp(ms):
@@ -329,6 +339,52 @@ def write_summary_file(folder, trace_file, content):
         file.write(content)
 
 
+# one of the main issues at the moment is that tasks are split by the hour / interval that they occur in, therefore they are split up and 
+# not considered full tasks, but we want this detailed report to consider their entire execution -- i.e. address by id
+# need some re-grouping stage to combine partial tasks at this stage ? 
+def write_detailed_report(folder, trace_file, records, content):
+    output_file_name = f"{folder}/{trace_file}-detailed-summary.txt"
+    whole_tasks = {}
+
+    for record in records:
+        curr_id = record.get_id()
+        if curr_id in whole_tasks:
+            present = whole_tasks[curr_id]
+            whole_tasks[curr_id].set_co2e(present.get_co2e() + record.get_co2e())
+            whole_tasks[curr_id].set_energy(present.get_energy() + record.get_energy())
+            whole_tasks[curr_id].set_avg_ci(f'{present.get_avg_ci()}|{record.get_avg_ci()}')
+            whole_tasks[curr_id].set_realtime(present.get_realtime() + record.get_realtime())
+        else:
+            whole_tasks[curr_id] = record
+
+    records = whole_tasks.values()
+
+    sorted_records = sorted(records, key=lambda r: (-r.get_co2e(), -r.get_energy(), -r.get_realtime()))
+    sorted_records_par = sorted(records, key=lambda r: (-r.get_energy(), -r.get_realtime()))
+
+    with open(output_file_name, "w") as file:
+        file.write(f"{HEADERS}\n")
+
+        for record in sorted_records:
+            file.write(f"{record}\n")
+
+    print('\nTop 10 Tasks - ranked by footprint, energy and realtime:')
+    for record in sorted_records[:10]:
+        print(record.get_name() + ':' + record.get_id())
+
+    print('\nTop 10 Tasks - ranked by energy and realtime:')
+    for record in sorted_records_par[:10]:
+        print(record.get_name() + ':' + record.get_id())
+
+    diff = set(sorted_records[:10]).difference(set(sorted_records_par[:10]))
+    if len(diff) == 0:
+        print('\nThe top 10 tasks with the largest energy and realtime have the largest footprint.')
+    else:
+        print('\nThe following tasks have one of the top 10 largest footprints, but not the highest energy or realtime...')
+        print(', '.join([record.get_name() + ':' + record.get_id() for record in diff]))
+
+
+
 def main(arguments):
     # Data
     workflow = arguments[TRACE]
@@ -356,17 +412,17 @@ def main(arguments):
 
     check_reserved_memory_flag = RESERVED_MEMORY in arguments
 
-    (ccf, records) = calculate_carbon_footprint_ccf(tasks_by_hour, ci, pue, min_watts, max_watts, memory_coefficient, check_reserved_memory_flag)
-    ccf_energy, ccf_energy_pue, ccf_memory, ccf_memory_pue, ccf_carbon_emissions, node_memory_usage = ccf
+    (cf, records) = calculate_carbon_footprint_ccf(tasks_by_hour, ci, pue, min_watts, max_watts, memory_coefficient, check_reserved_memory_flag)
+    cpu_energy, cpu_energy_pue, mem_energy, mem_energy_pue, carbon_emissions, node_memory_usage = cf
 
     summary += "\nCloud Carbon Footprint Method:\n"
-    summary += f"- Energy Consumption (exc. PUE): {ccf_energy}kWh\n"
-    summary += f"- Energy Consumption (inc. PUE): {ccf_energy_pue}kWh\n"
-    summary += f"- Memory Energy Consumption (exc. PUE): {ccf_memory}kWh\n"
-    summary += f"- Memory Energy Consumption (inc. PUE): {ccf_memory_pue}kWh\n"
-    summary += f"- Carbon Emissions: {ccf_carbon_emissions}gCO2e"
+    summary += f"- Energy Consumption (exc. PUE): {cpu_energy}kWh\n"
+    summary += f"- Energy Consumption (inc. PUE): {cpu_energy_pue}kWh\n"
+    summary += f"- Memory Energy Consumption (exc. PUE): {mem_energy}kWh\n"
+    summary += f"- Memory Energy Consumption (inc. PUE): {mem_energy_pue}kWh\n"
+    summary += f"- Carbon Emissions: {carbon_emissions}gCO2e"
 
-    print(f"Carbon Emissions (CCF): {ccf_carbon_emissions}gCO2e")
+    print(f"Carbon Emissions: {carbon_emissions}gCO2e")
 
     if check_reserved_memory_flag:
         total_res_mem_energy = 0
@@ -377,10 +433,10 @@ def main(arguments):
             total_res_mem_energy += res_mem_energy
             total_res_mem_emissions += res_mem_energy * ci_val
 
-        total_energy = total_res_mem_energy + ccf_energy + ccf_memory
+        total_energy = total_res_mem_energy + cpu_energy + mem_energy
         res_report = f"Reserved Memory Energy Consumption: {total_res_mem_energy}kWh"
         res_ems_report = f"Reserved Memory Carbon Emissions: {total_res_mem_emissions}gCO2e"
-        energy_split_report = f"% CPU [{((ccf_energy / total_energy) * 100):.2f}%] | % Memory [{(((total_res_mem_energy + ccf_memory) / total_energy) * 100):.2f}%]"
+        energy_split_report = f"% CPU [{((cpu_energy / total_energy) * 100):.2f}%] | % Memory [{(((total_res_mem_energy + mem_energy) / total_energy) * 100):.2f}%]"
         summary += f"\n{res_report}\n"
         summary += f"{res_ems_report}\n"
         summary += f"{energy_split_report}\n"
@@ -406,8 +462,9 @@ def main(arguments):
 
     write_summary_file("output", workflow + "-" + ci, summary)
     write_trace_file("output", workflow + "-" + ci, records)
+    write_detailed_report("output", workflow + "-" + ci, records, summary)
 
-    return (summary, ccf_carbon_emissions)
+    return (summary, carbon_emissions)
 
 
 def get_carbon_footprint(command):
