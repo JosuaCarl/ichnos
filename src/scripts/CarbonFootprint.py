@@ -339,10 +339,7 @@ def write_summary_file(folder, trace_file, content):
         file.write(content)
 
 
-# one of the main issues at the moment is that tasks are split by the hour / interval that they occur in, therefore they are split up and 
-# not considered full tasks, but we want this detailed report to consider their entire execution -- i.e. address by id
-# need some re-grouping stage to combine partial tasks at this stage ? 
-def write_detailed_report(folder, trace_file, records, content):
+def write_trace_and_detailed_report(folder, trace_file, records, content):
     output_file_name = f"{folder}/{trace_file}-detailed-summary.txt"
     whole_tasks = {}
 
@@ -358,31 +355,28 @@ def write_detailed_report(folder, trace_file, records, content):
             whole_tasks[curr_id] = record
 
     records = whole_tasks.values()
+    write_trace_file(folder, trace_file, records)
 
     sorted_records = sorted(records, key=lambda r: (-r.get_co2e(), -r.get_energy(), -r.get_realtime()))
     sorted_records_par = sorted(records, key=lambda r: (-r.get_energy(), -r.get_realtime()))
 
     with open(output_file_name, "w") as file:
-        file.write(f"{HEADERS}\n")
+        file.write(f'Detailed Report for {trace_file}\n')
+        file.write('\nTop 10 Tasks - ranked by footprint, energy and realtime:\n')
+        for record in sorted_records[:10]:
+            file.write(record.get_name() + ':' + record.get_id() + '\n')
 
-        for record in sorted_records:
-            file.write(f"{record}\n")
+        file.write('\nTop 10 Tasks - ranked by energy and realtime:\n')
+        for record in sorted_records_par[:10]:
+            file.write(record.get_name() + ':' + record.get_id() + '\n')
 
-    print('\nTop 10 Tasks - ranked by footprint, energy and realtime:')
-    for record in sorted_records[:10]:
-        print(record.get_name() + ':' + record.get_id())
+        diff = set(sorted_records[:10]).difference(set(sorted_records_par[:10]))
 
-    print('\nTop 10 Tasks - ranked by energy and realtime:')
-    for record in sorted_records_par[:10]:
-        print(record.get_name() + ':' + record.get_id())
-
-    diff = set(sorted_records[:10]).difference(set(sorted_records_par[:10]))
-    if len(diff) == 0:
-        print('\nThe top 10 tasks with the largest energy and realtime have the largest footprint.')
-    else:
-        print('\nThe following tasks have one of the top 10 largest footprints, but not the highest energy or realtime...')
-        print(', '.join([record.get_name() + ':' + record.get_id() for record in diff]))
-
+        if len(diff) == 0:
+            file.write('\nThe top 10 tasks with the largest energy and realtime have the largest footprint.\n')
+        else:
+            file.write('\nThe following tasks have one of the top 10 largest footprints, but not the highest energy or realtime...\n')
+            file.write(', '.join([record.get_name() + ':' + record.get_id() for record in diff]))
 
 
 def main(arguments):
@@ -461,8 +455,7 @@ def main(arguments):
         ci = arguments[CI]
 
     write_summary_file("output", workflow + "-" + ci, summary)
-    write_trace_file("output", workflow + "-" + ci, records)
-    write_detailed_report("output", workflow + "-" + ci, records, summary)
+    write_trace_and_detailed_report("output", workflow + "-" + ci, records, summary)
 
     return (summary, carbon_emissions)
 

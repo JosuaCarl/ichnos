@@ -1,13 +1,13 @@
 Carbon Footprint Trace:
 - carbon-intensity: ci
 - power-usage-effectiveness: 1.0
-- min to max watts: 65.0W to 113.0W
+- min to max watts: 65.0W to 130.0W
 - memory-power-draw: 0.392
 
 Cloud Carbon Footprint Method:
-- Energy Consumption (exc. PUE): 0.00024101111111111108kWh
-- Energy Consumption (inc. PUE): 0.00024101111111111108kWh
+- Energy Consumption (exc. PUE): 0.00025602777777777776kWh
+- Energy Consumption (inc. PUE): 0.00025602777777777776kWh
 - Memory Energy Consumption (exc. PUE): 4.791111111111111e-06kWh
 - Memory Energy Consumption (inc. PUE): 4.791111111111111e-06kWh
-- Carbon Emissions: 0.02630083777777778gCO2e
+- Carbon Emissions: 0.02790762111111111gCO2e
 Task Runtime: 11000.0ms
