@@ -161,21 +161,14 @@ def get_tasks_by_hour_with_overhead(start_hour, end_hour, tasks, interval):
 def adjust_by_interval(original, mins):
     ts = to_timestamp(original)
     ts = ts + time.timedelta(minutes=mins)
+    ts = ts.replace(second=0, microsecond=0)
     return int(ts.timestamp() * 1000)
 
 
-def to_closest_hour_ms(original):
+def to_closest_interval_ms(original, interval):
     ts = to_timestamp(original)
-
-    if ts.minute >= 30:
-        if ts.hour + 1 == 24:
-            ts = ts + time.timedelta(days=1)
-            ts = ts.replace(hour=0, minute=0, second=0, microsecond=0)
-        else:
-            ts = ts.replace(second=0, microsecond=0, minute=0, hour=ts.hour+1)
-    else:
-        ts = ts.replace(second=0, microsecond=0, minute=0)
-
+    ts = ts + time.timedelta(minutes=interval)
+    ts = ts.replace(second=0, microsecond=0)
     return int(ts.timestamp() * 1000)  # closest hour in ms
 
 
@@ -189,8 +182,8 @@ def get_tasks_by_interval(tasks, interval):
 
     earliest = min(starts)
     latest = max(ends)
-    earliest_hh = adjust_by_interval(to_closest_hour_ms(earliest), -interval) 
-    latest_hh = adjust_by_interval(to_closest_hour_ms(latest), interval)
+    earliest_hh = adjust_by_interval(to_closest_interval_ms(earliest, interval), -interval) 
+    latest_hh = adjust_by_interval(to_closest_interval_ms(latest, interval), interval)
 
     return get_tasks_by_hour_with_overhead(earliest_hh, latest_hh, tasks, interval)
 
