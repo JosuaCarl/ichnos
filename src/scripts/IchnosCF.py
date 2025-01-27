@@ -412,9 +412,8 @@ def main(arguments):
     memory_coefficient = arguments[MEMORY_COEFFICIENT]
     (tasks_by_interval, _) = extract_tasks_by_interval(workflow, interval)
 
-    # TODO - finish supporting intervals
-    for hour, records in tasks_by_interval.items():
-        print(f'interval: {to_timestamp(hour)}')
+    for curr_interval, records in tasks_by_interval.items():
+        print(f'interval: {to_timestamp(curr_interval)}')
         if len(records) > 0:
             print(f'tasks: {", ".join([record.get_id() for record in records])}')
 
