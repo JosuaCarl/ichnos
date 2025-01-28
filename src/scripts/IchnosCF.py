@@ -108,8 +108,9 @@ def get_tasks_by_hour_with_overhead(start_hour, end_hour, tasks, interval):
     overheads = []
     runtimes = []
 
-    step = interval * 60 * 1000  # 60 minutes in ms
-    i = start_hour - step  # start an hour before to be safe
+    step = interval * 60 * 1000  # interval minutes in ms
+    i = start_hour - step  # start an interval before to be safe
+    end_hour = end_hour + step  # finish an interval later to be safe
 
     while i <= end_hour:
         data = [] 
@@ -158,18 +159,12 @@ def get_tasks_by_hour_with_overhead(start_hour, end_hour, tasks, interval):
     return (tasks_by_hour, overheads)
 
 
-def adjust_by_interval(original, mins):
-    ts = to_timestamp(original)
-    ts = ts + time.timedelta(minutes=mins)
-    ts = ts.replace(second=0, microsecond=0)
-    return int(ts.timestamp() * 1000)
-
-
+# round down to the closest interval
 def to_closest_interval_ms(original, interval):
     ts = to_timestamp(original)
-    ts = ts + time.timedelta(minutes=interval)
     ts = ts.replace(second=0, microsecond=0)
-    return int(ts.timestamp() * 1000)  # closest hour in ms
+    ts = ts - time.timedelta(minutes=(ts.minute) % interval)
+    return int(ts.timestamp() * 1000) 
 
 
 def get_tasks_by_interval(tasks, interval):
@@ -182,8 +177,8 @@ def get_tasks_by_interval(tasks, interval):
 
     earliest = min(starts)
     latest = max(ends)
-    earliest_hh = adjust_by_interval(to_closest_interval_ms(earliest, interval), -interval) 
-    latest_hh = adjust_by_interval(to_closest_interval_ms(latest, interval), interval)
+    earliest_hh = to_closest_interval_ms(earliest, interval)
+    latest_hh = to_closest_interval_ms(latest, interval)
 
     return get_tasks_by_hour_with_overhead(earliest_hh, latest_hh, tasks, interval)
 
@@ -221,7 +216,7 @@ def estimate_task_energy_consumption_ccf(task: CarbonRecord, min_watts, max_watt
 
 
 # Estimate Carbon Footprint using CCF Methodology
-def calculate_carbon_footprint_ccf(tasks_by_hour, ci, pue: float, min_watts, max_watts, memory_coefficient, check_node_memory=False):
+def calculate_carbon_footprint_ccf(tasks_grouped_by_interval, ci, pue: float, min_watts, max_watts, memory_coefficient, check_node_memory=False):
     total_energy = 0.0
     total_energy_pue = 0.0
     total_memory_energy = 0.0
@@ -230,12 +225,12 @@ def calculate_carbon_footprint_ccf(tasks_by_hour, ci, pue: float, min_watts, max
     records = []
     node_memory_used = []
 
-    for hour, tasks in tasks_by_hour.items():
+    for group_interval, tasks in tasks_grouped_by_interval.items():
         if len(tasks) > 0:
             if isinstance(ci, float):
                 ci_val = ci
             else:
-                hour_ts = to_timestamp(hour)
+                hour_ts = to_timestamp(group_interval)
                 hh = str(hour_ts.hour).zfill(2)
                 month = str(hour_ts.month).zfill(2)
                 day = str(hour_ts.day).zfill(2)
