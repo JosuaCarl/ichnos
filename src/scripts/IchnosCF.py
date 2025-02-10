@@ -540,8 +540,8 @@ def main(arguments):
     else:
         ci = arguments[CI]
 
-    write_summary_file("output", workflow + "-" + ci, summary)
-    write_task_trace_and_rank_report("output", workflow + "-" + ci, records)
+    write_summary_file("output", workflow + "-" + ci + "-" + model_name, summary)
+    write_task_trace_and_rank_report("output", workflow + "-" + ci + "-" + model_name, records)
 
     return (summary, carbon_emissions)
 
