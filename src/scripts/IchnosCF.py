@@ -25,18 +25,84 @@ DEFAULT_MEMORY_POWER_DRAW = 0.392  # W/GB
 RESERVED_MEMORY = "reserved-memory"
 NUM_OF_NODES = "num-of-nodes"
 TASK_FLAG = True
+MODEL_NAME = 'model-name'
+node_min_watts = 48.26
+node_max_watts = 124.96333333333332
+tdp_per_core = 11.875 
 
 
 # Functions
-def linear_power_model(cpu_usage, min_watts, max_watts):
-    return min_watts + cpu_usage * (max_watts - min_watts)
+def baseline_ga(cpu_usage):
+    return 11.875 * cpu_usage
+
+def linear_power_model(cpu_usage):
+    return node_min_watts + cpu_usage * (node_max_watts - node_min_watts)
+
+def model_gpg_13_ondemand(cpu_usage):
+    return ( 2.120111370111352e-05  * (cpu_usage ** 3) ) + ( -0.010314627039627027  * (cpu_usage ** 2) ) + ( 1.583392126392127  * (cpu_usage ** 1) ) + ( 49.00097902097905  )
+
+def model_gpg_13_performance(cpu_usage):
+    return ( 2.861564361564371e-05  * (cpu_usage ** 3) ) + ( -0.010774902874902908  * (cpu_usage ** 2) ) + ( 1.5437219632219659  * (cpu_usage ** 1) ) + ( 50.27918414918414  )
+
+def model_gpg_13_powersave(cpu_usage):
+    return ( -1.2509712509706113e-06  * (cpu_usage ** 3) ) + ( -0.00435291375291386  * (cpu_usage ** 2) ) + ( 1.0180155400155448  * (cpu_usage ** 1) ) + ( 48.060862470862425  )
+
+def model_gpg_14_ondemand(cpu_usage):
+    return ( 2.5435120435119894e-05  * (cpu_usage ** 3) ) + ( -0.01050792540792533  * (cpu_usage ** 2) ) + ( 1.546503108003105  * (cpu_usage ** 1) ) + ( 50.543682983683055  )
+
+def model_gpg_14_performance(cpu_usage):
+    return ( 2.976560476560505e-05  * (cpu_usage ** 3) ) + ( -0.01055419580419587  * (cpu_usage ** 2) ) + ( 1.500831131831135  * (cpu_usage ** 1) ) + ( 51.75289044289049  )
+
+def model_gpg_14_powersave(cpu_usage):
+    return ( -1.612276612276791e-06  * (cpu_usage ** 3) ) + ( -0.004015695415695406  * (cpu_usage ** 2) ) + ( 0.9829405594405596  * (cpu_usage ** 1) ) + ( 49.289160839160864  )
+
+def model_gpg_15_ondemand(cpu_usage):
+    return ( 1.0183890183890104e-05  * (cpu_usage ** 3) ) + ( -0.008689432789432792  * (cpu_usage ** 2) ) + ( 1.625279202279203  * (cpu_usage ** 1) ) + ( 53.970606060606066  )
+
+def model_gpg_15_performance(cpu_usage):
+    return ( 1.10839160839165e-05  * (cpu_usage ** 3) ) + ( -0.008064724164724252  * (cpu_usage ** 2) ) + ( 1.5371985236985277  * (cpu_usage ** 1) ) + ( 55.72610722610721  )
+
+def model_gpg_15_powersave(cpu_usage):
+    return ( -3.1598031598030393e-06  * (cpu_usage ** 3) ) + ( -0.004507808857808884  * (cpu_usage ** 2) ) + ( 1.161149313649315  * (cpu_usage ** 1) ) + ( 52.835780885780885  )
+
+def model_gpg_16_ondemand(cpu_usage):
+    return ( 2.1170681170680637e-05  * (cpu_usage ** 3) ) + ( -0.008939510489510433  * (cpu_usage ** 2) ) + ( 1.3387931882931874  * (cpu_usage ** 1) ) + ( 46.50426573426577  )
+
+def model_gpg_16_performance(cpu_usage):
+    return ( 2.2970085470085892e-05  * (cpu_usage ** 3) ) + ( -0.00890654623154631  * (cpu_usage ** 2) ) + ( 1.3093255633255667  * (cpu_usage ** 1) ) + ( 47.258648018648  )
+
+def model_gpg_16_powersave(cpu_usage):
+    return ( 3.1112406112409483e-06  * (cpu_usage ** 3) ) + ( -0.00441396658896663  * (cpu_usage ** 2) ) + ( 0.9267213157213164  * (cpu_usage ** 1) ) + ( 45.58177156177157  )
+
+def model_gpg_22_performance(cpu_usage):
+    return ( 0.0007414795389795361  * (cpu_usage ** 3) ) + ( -0.13460499222999192  * (cpu_usage ** 2) ) + ( 8.232617586117582  * (cpu_usage ** 1) ) + ( 131.4333566433568  )
+
+def model_gpg_22_powersave(cpu_usage):
+    return ( 0.0008557536907536887  * (cpu_usage ** 3) ) + ( -0.15424075369075355  * (cpu_usage ** 2) ) + ( 9.282093240093246  * (cpu_usage ** 1) ) + ( 110.46752913752906  )
+
 
 
 # map from argument to power model
 def get_power_model(model_name):
+    print(f'Model Name Provided: {model_name}')
+
     models = {
         "linear": linear_power_model, 
-
+        "gpg_13_ondemand": model_gpg_13_ondemand,
+        "gpg_13_performance": model_gpg_13_performance,
+        "gpg_13_powersave": model_gpg_13_powersave,
+        "gpg_14_ondemand": model_gpg_14_ondemand,
+        "gpg_14_performance": model_gpg_14_performance,
+        "gpg_14_powersave": model_gpg_14_powersave,
+        "gpg_15_ondemand": model_gpg_15_ondemand,
+        "gpg_15_performance": model_gpg_15_performance,
+        "gpg_15_powersave": model_gpg_15_powersave,
+        "gpg_16_ondemand": model_gpg_16_ondemand,
+        "gpg_16_performance": model_gpg_16_performance,
+        "gpg_16_powersave": model_gpg_16_powersave,
+        "gpg_22_performance": model_gpg_22_performance,
+        "gpg_22_powersave": model_gpg_22_powersave,
+        "baseline": baseline_ga
     }
 
     if model_name not in models:
@@ -93,8 +159,8 @@ def parse_trace_file(filepath):
 
 
 def print_usage_exit():
-    # Ichnos CF Usage: provide trace, ci, min-max watts, interval defaults to 60 minutes, pue defaults to 1.0, memory draw defaults to 0.392
-    usage = "Ichnos: python -m src.scripts.IchnosCF <trace-name> <ci-value|ci-file-name> <min-watts> <max-watts> <? interval=60> <? pue=1.0> <? memory-coeff=0.392>"
+    # Ichnos CF Usage: provide trace, ci, power model (defaults to linear range), interval defaults to 60 minutes, pue defaults to 1.0, memory draw defaults to 0.392
+    usage = "Ichnos: python -m src.scripts.IchnosCF <trace-name> <ci-value|ci-file-name> <power_model> <? interval=60> <? pue=1.0> <? memory-coeff=0.392>"
     print(usage)
     exit(-1)
 
@@ -198,7 +264,7 @@ def extract_tasks_by_interval(filename, interval):
 
 
 # Estimate Energy Consumption using CCF Methodology
-def estimate_task_energy_consumption_ccf(task: CarbonRecord, min_watts, max_watts, memory_coefficient):
+def estimate_task_energy_consumption_ccf(task: CarbonRecord, model, model_name, memory_coefficient):
     # Time (h)
     time = task.get_realtime() / 1000 / 3600  # convert from ms to h
     # Number of Cores (int)
@@ -208,7 +274,9 @@ def estimate_task_energy_consumption_ccf(task: CarbonRecord, min_watts, max_watt
     # Memory (GB)
     memory = task.get_memory() / 1073741824  # memory reported in bytes  https://www.nextflow.io/docs/latest/metrics.html 
     # Core Energy Consumption (without PUE)
-    core_consumption = time * linear_power_model(cpu_usage, min_watts, max_watts) * 0.001  # convert from W to kW
+    core_consumption = time * model(cpu_usage) * 0.001  # convert from W to kW
+    if (model_name == 'baseline'):
+        core_consumption = core_consumption * no_cores
     # Memory Power Consumption (without PUE)
     memory_consumption = memory * memory_coefficient * time * 0.001  # convert from W to kW
     # Overall and Memory Consumption (kWh) (without PUE)
@@ -216,7 +284,7 @@ def estimate_task_energy_consumption_ccf(task: CarbonRecord, min_watts, max_watt
 
 
 # Estimate Carbon Footprint using CCF Methodology
-def calculate_carbon_footprint_ccf(tasks_grouped_by_interval, ci, pue: float, min_watts, max_watts, memory_coefficient, check_node_memory=False):
+def calculate_carbon_footprint_ccf(tasks_grouped_by_interval, ci, pue: float, model_name, memory_coefficient, check_node_memory=False):
     total_energy = 0.0
     total_energy_pue = 0.0
     total_memory_energy = 0.0
@@ -224,6 +292,7 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval, ci, pue: float, mi
     total_carbon_emissions = 0.0
     records = []
     node_memory_used = []
+    power_model = get_power_model(model_name)
 
     for group_interval, tasks in tasks_grouped_by_interval.items():
         if len(tasks) > 0:
@@ -252,7 +321,7 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval, ci, pue: float, mi
                 node_memory_used.append((realtime, ci_val))
 
             for task in tasks:
-                (energy, memory) = estimate_task_energy_consumption_ccf(task, min_watts, max_watts, memory_coefficient)
+                (energy, memory) = estimate_task_energy_consumption_ccf(task, power_model, model_name, memory_coefficient)
                 energy_pue = energy * pue
                 memory_pue = memory * pue
                 task_footprint = (energy_pue + memory_pue) * ci_val
@@ -288,7 +357,7 @@ def check_if_float(value):
 
 
 def parse_arguments(args):
-    if len(args) != 4 and len(args) != 5 and len(args) != 7 and len(args) != 9:
+    if len(args) != 3 and len(args) != 4 and len(args) != 6 and len(args) != 8:
         print_usage_exit()
 
     arguments = {}
@@ -299,23 +368,22 @@ def parse_arguments(args):
     else:
         arguments[CI] = args[1]
 
-    arguments[MIN_WATTS] = float(args[2])
-    arguments[MAX_WATTS] = float(args[3])
+    arguments[MODEL_NAME] = args[2]
 
-    if len(args) == 5:
-        arguments[INTERVAL] = int(args[4])
+    if len(args) == 4:
+        arguments[INTERVAL] = int(args[3])
         arguments[PUE] = DEFAULT_PUE_VALUE
         arguments[MEMORY_COEFFICIENT] = DEFAULT_MEMORY_POWER_DRAW
-    elif len(args) == 7:
-        arguments[INTERVAL] = int(args[4])
-        arguments[PUE] = float(args[5])
-        arguments[MEMORY_COEFFICIENT] = float(args[6])
-    elif len(args) == 9:
-        arguments[INTERVAL] = int(args[4])
-        arguments[PUE] = float(args[5])
-        arguments[MEMORY_COEFFICIENT] = float(args[6])
-        arguments[RESERVED_MEMORY] = float(args[7])
-        arguments[NUM_OF_NODES] = int(args[8])
+    elif len(args) == 6:
+        arguments[INTERVAL] = int(args[3])
+        arguments[PUE] = float(args[4])
+        arguments[MEMORY_COEFFICIENT] = float(args[5])
+    elif len(args) == 8:
+        arguments[INTERVAL] = int(args[3])
+        arguments[PUE] = float(args[4])
+        arguments[MEMORY_COEFFICIENT] = float(args[5])
+        arguments[RESERVED_MEMORY] = float(args[6])
+        arguments[NUM_OF_NODES] = int(args[7])
     else:
         arguments[INTERVAL] = 60
         arguments[PUE] = DEFAULT_PUE_VALUE
@@ -390,7 +458,7 @@ def write_task_trace_and_rank_report(folder, trace_file, records):
                 task_rank_file.write('BREAK\nSAME\nEND\n')
             else:
                 report_file.write('\nThe following tasks have one of the top 10 largest footprints, but not the highest energy or realtime...\n')
-                report_file.write(', '.join(diff))
+                report_file.write(', '.join([str(task) for task in diff]))
                 task_rank_file.write('BREAK\nDIFF\nEND\n')
 
 
@@ -399,10 +467,7 @@ def main(arguments):
     workflow = arguments[TRACE]
     pue = arguments[PUE]
     interval = arguments[INTERVAL]
-
-    if MIN_WATTS in arguments and MAX_WATTS in arguments:
-        min_watts = arguments[MIN_WATTS]
-        max_watts = arguments[MAX_WATTS]
+    model_name = arguments[MODEL_NAME]
 
     memory_coefficient = arguments[MEMORY_COEFFICIENT]
     (tasks_by_interval, _) = extract_tasks_by_interval(workflow, interval)
@@ -416,7 +481,7 @@ def main(arguments):
     summary += "Carbon Footprint Trace:\n"
     summary += f"- carbon-intensity: {arguments[CI]}\n"
     summary += f"- power-usage-effectiveness: {pue}\n"
-    summary += f"- min to max watts: {min_watts}W to {max_watts}W\n"
+    summary += f"- power model selected: {model_name}\n"
     summary += f"- memory-power-draw: {memory_coefficient}\n"
 
     if isinstance(arguments[CI], float):
@@ -427,7 +492,7 @@ def main(arguments):
 
     check_reserved_memory_flag = RESERVED_MEMORY in arguments
 
-    (cf, records) = calculate_carbon_footprint_ccf(tasks_by_interval, ci, pue, min_watts, max_watts, memory_coefficient, check_reserved_memory_flag)
+    (cf, records) = calculate_carbon_footprint_ccf(tasks_by_interval, ci, pue, model_name, memory_coefficient, check_reserved_memory_flag)
     cpu_energy, cpu_energy_pue, mem_energy, mem_energy_pue, carbon_emissions, node_memory_usage = cf
 
     summary += "\nCloud Carbon Footprint Method:\n"
