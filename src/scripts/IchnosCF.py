@@ -28,12 +28,12 @@ TASK_FLAG = True
 MODEL_NAME = 'model-name'
 node_min_watts = 48.26
 node_max_watts = 124.96333333333332
-tdp_per_core = 11.875 
+tdp_per_core = 11.875   # 95W / 8
 
 
 # Functions
 def baseline_ga(cpu_usage):
-    return 11.875 * cpu_usage
+    return tdp_per_core * cpu_usage
 
 def linear_power_model(cpu_usage):
     return node_min_watts + cpu_usage * (node_max_watts - node_min_watts)
