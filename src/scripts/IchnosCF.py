@@ -281,7 +281,7 @@ def estimate_task_energy_consumption_ccf(task: CarbonRecord, model, model_name, 
     # Number of Cores (int)
     no_cores = task.get_core_count()
     # CPU Usage (%)
-    cpu_usage = task.get_cpu_usage() / system_cores  # no_cores  # (100.0 * no_cores)
+    cpu_usage = task.get_cpu_usage() / system_cores  # nextflow reports as overall utilisation
     # Memory (GB)
     memory = task.get_memory() / 1073741824  # memory reported in bytes  https://www.nextflow.io/docs/latest/metrics.html 
     # Core Energy Consumption (without PUE)
