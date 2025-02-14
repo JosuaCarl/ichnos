@@ -33,14 +33,15 @@ node_min_watts = 48.26
 node_max_watts = 124.96333333333332
 tdp_per_core = 11.875
 system_cores = 32
+node_mem_draw = 0.40268229166666664
 
 
 # Functions
 def baseline_ga(cpu_usage):
-    return tdp_per_core * cpu_usage
+    return tdp_per_core * (cpu_usage / 100)
 
 def linear_power_model(cpu_usage):
-    return node_min_watts + cpu_usage * (node_max_watts - node_min_watts)
+    return node_min_watts + (cpu_usage / 100) * (node_max_watts - node_min_watts)
 
 def model_gpg_13_ondemand(cpu_usage):
     return ( 2.120111370111352e-05  * (cpu_usage ** 3) ) + ( -0.010314627039627027  * (cpu_usage ** 2) ) + ( 1.583392126392127  * (cpu_usage ** 1) ) + ( 49.00097902097905  )
@@ -479,8 +480,11 @@ def main(arguments):
     pue = arguments[PUE]
     interval = arguments[INTERVAL]
     model_name = arguments[MODEL_NAME]
+    memory_coefficient = node_mem_draw
 
-    memory_coefficient = arguments[MEMORY_COEFFICIENT]
+    if memory_coefficient == None:
+        memory_coefficient = DEFAULT_MEMORY_POWER_DRAW
+
     (tasks_by_interval, _) = extract_tasks_by_interval(workflow, interval)
 
     for curr_interval, records in tasks_by_interval.items():
