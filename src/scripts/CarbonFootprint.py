@@ -3,6 +3,7 @@ from src.models.CarbonRecord import CarbonRecord, HEADERS
 import sys
 import datetime as time
 import copy
+import os
 
 
 # Default Values
@@ -313,6 +314,10 @@ def parse_arguments(args):
 
 
 def write_trace_file(folder, trace_file, records):
+    # Create the folder if it doesn't exist
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
     output_file_name = f"{folder}/{trace_file}-trace.csv"
 
     with open(output_file_name, "w") as file:
@@ -323,6 +328,10 @@ def write_trace_file(folder, trace_file, records):
 
 
 def write_summary_file(folder, trace_file, content):
+    # Create the folder if it doesn't exist
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
     output_file_name = f"{folder}/{trace_file}-summary.txt"
 
     with open(output_file_name, "w") as file:
