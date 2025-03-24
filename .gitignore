@@ -5,3 +5,6 @@
 # Project Specific Files
 *-marg*
 data/raw-traces/
+
+# Output Directory
+output/
