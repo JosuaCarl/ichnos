@@ -4,7 +4,7 @@ from src.models.CarbonRecord import CarbonRecord
 from src.Constants import *
 from src.utils.Parsers import parse_arguments, parse_ci_intervals
 from src.utils.TimeUtils import extract_tasks_by_hour, to_timestamp
-from src.utils.FileWriters import write_trace_file, write_summary_file
+from src.utils.FileWriters import write_trace_and_detailed_report, write_summary_file
 
 # Functions
 def linear_power_model(cpu_usage, min_watts, max_watts):
