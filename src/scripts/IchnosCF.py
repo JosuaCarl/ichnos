@@ -12,6 +12,7 @@ DELIMITER = ","
 TRACE = "trace"
 CI = "ci"
 PUE = "pue"
+INTERVAL = "interval"
 CORE_POWER_DRAW = "core-power-draw"
 MEMORY_COEFFICIENT = "memory-coefficient"
 MIN_WATTS = "min-watts"
@@ -24,18 +25,96 @@ DEFAULT_MEMORY_POWER_DRAW = 0.392  # W/GB
 RESERVED_MEMORY = "reserved-memory"
 NUM_OF_NODES = "num-of-nodes"
 TASK_FLAG = True
+MODEL_NAME = 'model-name' 
+
+# Node Specific Configuration
+# GPG Node 13 - Governor [ondemand]
+node_min_watts = 48.26
+node_max_watts = 124.96333333333332
+tdp_per_core = 11.875
+system_cores = 32
+node_mem_draw = 0.40268229166666664
 
 
 # Functions
-def linear_power_model(cpu_usage, min_watts, max_watts):
-    return min_watts + cpu_usage * (max_watts - min_watts)
+def baseline_ga(cpu_usage):
+    return tdp_per_core * (cpu_usage / 100)
+
+def linear_power_model(cpu_usage):
+    return node_min_watts + (cpu_usage / 100) * (node_max_watts - node_min_watts)
+
+def model_gpg_13_ondemand(cpu_usage):
+    return ( 2.120111370111352e-05  * (cpu_usage ** 3) ) + ( -0.010314627039627027  * (cpu_usage ** 2) ) + ( 1.583392126392127  * (cpu_usage ** 1) ) + ( 49.00097902097905  )
+
+def model_gpg_13_ondemand_linear(cpu_usage):
+    return ( 0.7486757575757578  * (cpu_usage ** 1) ) + ( 60.465909090909086  )
+
+def model_gpg_14_performance(cpu_usage):
+    return ( 2.976560476560505e-05  * (cpu_usage ** 3) ) + ( -0.01055419580419587  * (cpu_usage ** 2) ) + ( 1.500831131831135  * (cpu_usage ** 1) ) + ( 51.75289044289049  )
+
+def model_gpg_14_performance_linear(cpu_usage):
+    return ( 0.7216363636363639  * (cpu_usage ** 1) ) + ( 61.95848484848483  )
+
+def model_gpg_14_powersave(cpu_usage):
+    return ( -1.612276612276791e-06  * (cpu_usage ** 3) ) + ( -0.004015695415695406  * (cpu_usage ** 2) ) + ( 0.9829405594405596  * (cpu_usage ** 1) ) + ( 49.289160839160864  )
+
+def model_gpg_14_powersave_linear(cpu_usage):
+    return ( 0.5664090909090908  * (cpu_usage ** 1) ) + ( 55.61742424242428  )
+
+def model_gpg_15_performance(cpu_usage):
+    return ( 1.10839160839165e-05  * (cpu_usage ** 3) ) + ( -0.008064724164724252  * (cpu_usage ** 2) ) + ( 1.5371985236985277  * (cpu_usage ** 1) ) + ( 55.72610722610721  )
+
+def model_gpg_15_performance_linear(cpu_usage):
+    return ( 0.8335848484848487  * (cpu_usage ** 1) ) + ( 65.72833333333334  )
+
+def model_gpg_15_powersave(cpu_usage):
+    return ( -3.1598031598030393e-06  * (cpu_usage ** 3) ) + ( -0.004507808857808884  * (cpu_usage ** 2) ) + ( 1.161149313649315  * (cpu_usage ** 1) ) + ( 52.835780885780885  )
+
+def model_gpg_15_powersave_linear(cpu_usage):
+    return ( 0.6810454545454548  * (cpu_usage ** 1) ) + ( 60.19469696969696  )
+
+def model_gpg_16_ondemand(cpu_usage):
+    return ( 2.1170681170680637e-05  * (cpu_usage ** 3) ) + ( -0.008939510489510433  * (cpu_usage ** 2) ) + ( 1.3387931882931874  * (cpu_usage ** 1) ) + ( 46.50426573426577  )
+
+def model_gpg_16_ondemand_linear(cpu_usage):
+    return ( 0.6413060606060605  * (cpu_usage ** 1) ) + ( 55.91227272727273  )
+
+def model_gpg_22_performance(cpu_usage):
+    return ( 0.0007414795389795361  * (cpu_usage ** 3) ) + ( -0.13460499222999192  * (cpu_usage ** 2) ) + ( 8.232617586117582  * (cpu_usage ** 1) ) + ( 131.4333566433568  )
+
+def model_gpg_22_performance_linear(cpu_usage):
+    return ( 1.6530484848484859  * (cpu_usage ** 1) ) + ( 193.20121212121217  )
+
+def model_gpg_22_powersave(cpu_usage):
+    return ( 0.0008557536907536887  * (cpu_usage ** 3) ) + ( -0.15424075369075355  * (cpu_usage ** 2) ) + ( 9.282093240093246  * (cpu_usage ** 1) )# + ( 110.46752913752906  )
+
+def model_gpg_22_powersave_linear(cpu_usage):
+    return ( 1.7994121212121201  * (cpu_usage ** 1) ) + ( 180.0912121212122  )
 
 
 # map from argument to power model
 def get_power_model(model_name):
+    print(f'Model Name Provided: {model_name}')
+
     models = {
         "linear": linear_power_model, 
-
+        "gpg_13_ondemand": model_gpg_13_ondemand,
+        "gpg_13_ondemand_linear": model_gpg_13_ondemand_linear,
+        "gpg_14_performance": model_gpg_14_performance,
+        "gpg_14_performance_linear": model_gpg_14_performance_linear,
+        "gpg_14_powersave": model_gpg_14_powersave,
+        "gpg_14_powersave_linear": model_gpg_14_powersave_linear,
+        "gpg_15_performance": model_gpg_15_performance,
+        "gpg_15_performance_linear": model_gpg_15_performance_linear,
+        "gpg_15_powersave": model_gpg_15_powersave,
+        "gpg_15_powersave_linear": model_gpg_15_powersave_linear,
+        "gpg_16_ondemand": model_gpg_16_ondemand,
+        "gpg_16_ondemand_linear": model_gpg_16_ondemand_linear,
+        "gpg_22_performance": model_gpg_22_performance,
+        "gpg_22_performance_linear": model_gpg_22_performance_linear,
+        "gpg_22_powersave": model_gpg_22_powersave,
+        "gpg_22_powersave_linear": model_gpg_22_powersave_linear,
+        "baseline": baseline_ga
     }
 
     if model_name not in models:
@@ -92,7 +171,8 @@ def parse_trace_file(filepath):
 
 
 def print_usage_exit():
-    usage = "Ichnos: python -m src.scripts.CarbonFootprint <trace-name> <ci-value|ci-file-name> <min-watts> <max-watts> <? pue=1.0> <? memory-coeff=0.392>"
+    # Ichnos CF Usage: provide trace, ci, power model (defaults to linear range), interval defaults to 60 minutes, pue defaults to 1.0, memory draw defaults to 0.392
+    usage = "Ichnos: python -m src.scripts.IchnosCF <trace-name> <ci-value|ci-file-name> <power_model> <? interval=60> <? pue=1.0> <? memory-coeff=0.392>"
     print(usage)
     exit(-1)
 
@@ -101,15 +181,16 @@ def get_carbon_record(record: TraceRecord):
     return record.make_carbon_record()
 
 
-def get_tasks_by_hour_with_overhead(start_hour, end_hour, tasks):
+def get_tasks_by_interval_with_overhead(start_interval, end_interval, tasks, interval):
     tasks_by_hour = {}
     overheads = []
     runtimes = []
 
-    step = 60 * 60 * 1000  # 60 minutes in ms
-    i = start_hour - step  # start an hour before to be safe
+    step = interval * 60 * 1000  # interval minutes in ms
+    i = start_interval - step  # start an interval before to be safe
+    end_interval = end_interval + step  # finish an interval later to be safe
 
-    while i <= end_hour:
+    while i <= end_interval:
         data = [] 
         hour_overhead = 0
 
@@ -156,23 +237,15 @@ def get_tasks_by_hour_with_overhead(start_hour, end_hour, tasks):
     return (tasks_by_hour, overheads)
 
 
-def to_closest_hour_ms(original):
+# round down to the closest interval
+def to_closest_interval_ms(original, interval):
     ts = to_timestamp(original)
-
-    if ts.minute >= 30:
-        if ts.hour + 1 == 24:
-            # ts = ts.replace(hour=0, minute=0, second=0, microsecond=0, day=ts.day+1)
-            ts = ts + time.timedelta(days=1)
-            ts = ts.replace(hour=0, minute=0, second=0, microsecond=0)
-        else:
-            ts = ts.replace(second=0, microsecond=0, minute=0, hour=ts.hour+1)
-    else:
-        ts = ts.replace(second=0, microsecond=0, minute=0)
-
-    return int(ts.timestamp() * 1000)  # closest hour in ms
+    ts = ts.replace(second=0, microsecond=0)
+    ts = ts - time.timedelta(minutes=(ts.minute) % interval)
+    return int(ts.timestamp() * 1000) 
 
 
-def get_tasks_by_hour(tasks):
+def get_tasks_by_interval(tasks, interval):
     starts = []
     ends = []
 
@@ -182,13 +255,13 @@ def get_tasks_by_hour(tasks):
 
     earliest = min(starts)
     latest = max(ends)
-    earliest_hh = to_closest_hour_ms(earliest)  
-    latest_hh = to_closest_hour_ms(latest)
+    earliest_interval = to_closest_interval_ms(earliest, interval)
+    latest_interval = to_closest_interval_ms(latest, interval)
 
-    return get_tasks_by_hour_with_overhead(earliest_hh, latest_hh, tasks)
+    return get_tasks_by_interval_with_overhead(earliest_interval, latest_interval, tasks, interval)
 
 
-def extract_tasks_by_hour(filename):
+def extract_tasks_by_interval(filename, interval):
     if len(filename.split(".")) > 1:
         filename = filename.split(".")[-2]
 
@@ -199,21 +272,23 @@ def extract_tasks_by_hour(filename):
         data = get_carbon_record(record)
         data_records.append(data)
 
-    return get_tasks_by_hour(data_records)
+    return get_tasks_by_interval(data_records, interval)
 
 
-# Estimate Energy Consumption using CCF Methodology
-def estimate_task_energy_consumption_ccf(task: CarbonRecord, min_watts, max_watts, memory_coefficient):
+# Estimate Energy Consumption
+def estimate_task_energy_consumption_ccf(task: CarbonRecord, model, model_name, memory_coefficient):
     # Time (h)
     time = task.get_realtime() / 1000 / 3600  # convert from ms to h
     # Number of Cores (int)
     no_cores = task.get_core_count()
     # CPU Usage (%)
-    cpu_usage = task.get_cpu_usage() / (100.0 * no_cores)
+    cpu_usage = task.get_cpu_usage() / system_cores  # nextflow reports as overall utilisation
     # Memory (GB)
     memory = task.get_memory() / 1073741824  # memory reported in bytes  https://www.nextflow.io/docs/latest/metrics.html 
     # Core Energy Consumption (without PUE)
-    core_consumption = time * linear_power_model(cpu_usage, min_watts, max_watts) * 0.001  # convert from W to kW
+    core_consumption = time * model(cpu_usage) * 0.001  # convert from W to kW
+    if (model_name == 'baseline'):
+        core_consumption = core_consumption * no_cores
     # Memory Power Consumption (without PUE)
     memory_consumption = memory * memory_coefficient * time * 0.001  # convert from W to kW
     # Overall and Memory Consumption (kWh) (without PUE)
@@ -221,7 +296,7 @@ def estimate_task_energy_consumption_ccf(task: CarbonRecord, min_watts, max_watt
 
 
 # Estimate Carbon Footprint using CCF Methodology
-def calculate_carbon_footprint_ccf(tasks_by_hour, ci, pue: float, min_watts, max_watts, memory_coefficient, check_node_memory=False):
+def calculate_carbon_footprint_ccf(tasks_grouped_by_interval, ci, pue: float, model_name, memory_coefficient, check_node_memory=False):
     total_energy = 0.0
     total_energy_pue = 0.0
     total_memory_energy = 0.0
@@ -229,13 +304,14 @@ def calculate_carbon_footprint_ccf(tasks_by_hour, ci, pue: float, min_watts, max
     total_carbon_emissions = 0.0
     records = []
     node_memory_used = []
+    power_model = get_power_model(model_name)
 
-    for hour, tasks in tasks_by_hour.items():
+    for group_interval, tasks in tasks_grouped_by_interval.items():
         if len(tasks) > 0:
             if isinstance(ci, float):
                 ci_val = ci
             else:
-                hour_ts = to_timestamp(hour)
+                hour_ts = to_timestamp(group_interval)
                 hh = str(hour_ts.hour).zfill(2)
                 month = str(hour_ts.month).zfill(2)
                 day = str(hour_ts.day).zfill(2)
@@ -257,7 +333,7 @@ def calculate_carbon_footprint_ccf(tasks_by_hour, ci, pue: float, min_watts, max
                 node_memory_used.append((realtime, ci_val))
 
             for task in tasks:
-                (energy, memory) = estimate_task_energy_consumption_ccf(task, min_watts, max_watts, memory_coefficient)
+                (energy, memory) = estimate_task_energy_consumption_ccf(task, power_model, model_name, memory_coefficient)
                 energy_pue = energy * pue
                 memory_pue = memory * pue
                 task_footprint = (energy_pue + memory_pue) * ci_val
@@ -293,7 +369,7 @@ def check_if_float(value):
 
 
 def parse_arguments(args):
-    if len(args) != 4 and len(args) != 6 and len(args) != 8:
+    if len(args) != 3 and len(args) != 4 and len(args) != 6 and len(args) != 8:
         print_usage_exit()
 
     arguments = {}
@@ -304,18 +380,24 @@ def parse_arguments(args):
     else:
         arguments[CI] = args[1]
 
-    arguments[MIN_WATTS] = float(args[2])
-    arguments[MAX_WATTS] = float(args[3])
+    arguments[MODEL_NAME] = args[2]
 
-    if len(args) == 6:
+    if len(args) == 4:
+        arguments[INTERVAL] = int(args[3])
+        arguments[PUE] = DEFAULT_PUE_VALUE
+        arguments[MEMORY_COEFFICIENT] = DEFAULT_MEMORY_POWER_DRAW
+    elif len(args) == 6:
+        arguments[INTERVAL] = int(args[3])
         arguments[PUE] = float(args[4])
         arguments[MEMORY_COEFFICIENT] = float(args[5])
     elif len(args) == 8:
+        arguments[INTERVAL] = int(args[3])
         arguments[PUE] = float(args[4])
         arguments[MEMORY_COEFFICIENT] = float(args[5])
         arguments[RESERVED_MEMORY] = float(args[6])
         arguments[NUM_OF_NODES] = int(args[7])
     else:
+        arguments[INTERVAL] = 60
         arguments[PUE] = DEFAULT_PUE_VALUE
         arguments[MEMORY_COEFFICIENT] = DEFAULT_MEMORY_POWER_DRAW
 
@@ -339,8 +421,9 @@ def write_summary_file(folder, trace_file, content):
         file.write(content)
 
 
-def write_trace_and_detailed_report(folder, trace_file, records, content):
+def write_task_trace_and_rank_report(folder, trace_file, records):
     output_file_name = f"{folder}/{trace_file}-detailed-summary.txt"
+    technical_output_file_name = f"{folder}/{trace_file}-task-ranked.csv"
     whole_tasks = {}
 
     for record in records:
@@ -360,42 +443,60 @@ def write_trace_and_detailed_report(folder, trace_file, records, content):
     sorted_records = sorted(records, key=lambda r: (-r.get_co2e(), -r.get_energy(), -r.get_realtime()))
     sorted_records_par = sorted(records, key=lambda r: (-r.get_energy(), -r.get_realtime()))
 
-    with open(output_file_name, "w") as file:
-        file.write(f'Detailed Report for {trace_file}\n')
-        file.write('\nTop 10 Tasks - ranked by footprint, energy and realtime:\n')
-        for record in sorted_records[:10]:
-            file.write(record.get_name() + ':' + record.get_id() + '\n')
+    with open(output_file_name, "w") as report_file:
+        with open(technical_output_file_name, "w") as task_rank_file:
+            report_file.write(f'Detailed Report for {trace_file}\n')
+            task_rank_file.write(f'{HEADERS}\nBREAK\n')
 
-        file.write('\nTop 10 Tasks - ranked by energy and realtime:\n')
-        for record in sorted_records_par[:10]:
-            file.write(record.get_name() + ':' + record.get_id() + '\n')
+            report_file.write('\nTop 10 Tasks - ranked by footprint, energy and realtime:\n')
+            task_rank_file.write('TOP|FOOTPRINT-ENERGY-REALTIME\n')
+            report_file.write(f'\n{HEADERS}\n')
+            for record in sorted_records[:10]:
+                report_file.write(f"{record}\n")
+                task_rank_file.write(f"{record}\n")
 
-        diff = set(sorted_records[:10]).difference(set(sorted_records_par[:10]))
+            task_rank_file.write('BREAK\n')
+            report_file.write('\nTop 10 Tasks - ranked by energy and realtime:\n')
+            report_file.write(f'\n{HEADERS}\n')
+            task_rank_file.write('TOP|ENERGY-REALTIME\n')
+            for record in sorted_records[:10]:
+                report_file.write(f"{record}\n")
+                task_rank_file.write(f"{record}\n")
 
-        if len(diff) == 0:
-            file.write('\nThe top 10 tasks with the largest energy and realtime have the largest footprint.\n')
-        else:
-            file.write('\nThe following tasks have one of the top 10 largest footprints, but not the highest energy or realtime...\n')
-            file.write(', '.join([record.get_name() + ':' + record.get_id() for record in diff]))
+            diff = set(sorted_records[:10]).difference(set(sorted_records_par[:10]))
+
+            if len(diff) == 0:
+                report_file.write('\nThe top 10 tasks with the largest energy and realtime have the largest footprint.\n')
+                task_rank_file.write('BREAK\nSAME\nEND\n')
+            else:
+                report_file.write('\nThe following tasks have one of the top 10 largest footprints, but not the highest energy or realtime...\n')
+                report_file.write(', '.join([str(task) for task in diff]))
+                task_rank_file.write('BREAK\nDIFF\nEND\n')
 
 
 def main(arguments):
     # Data
     workflow = arguments[TRACE]
     pue = arguments[PUE]
+    interval = arguments[INTERVAL]
+    model_name = arguments[MODEL_NAME]
+    memory_coefficient = node_mem_draw
 
-    if MIN_WATTS in arguments and MAX_WATTS in arguments:
-        min_watts = arguments[MIN_WATTS]
-        max_watts = arguments[MAX_WATTS]
+    if memory_coefficient == None:
+        memory_coefficient = DEFAULT_MEMORY_POWER_DRAW
 
-    memory_coefficient = arguments[MEMORY_COEFFICIENT]
-    (tasks_by_hour, _) = extract_tasks_by_hour(workflow)
+    (tasks_by_interval, _) = extract_tasks_by_interval(workflow, interval)
+
+    for curr_interval, records in tasks_by_interval.items():
+        print(f'interval: {to_timestamp(curr_interval)}')
+        if len(records) > 0:
+            print(f'tasks: {", ".join([record.get_id() for record in records])}')
 
     summary = ""
     summary += "Carbon Footprint Trace:\n"
     summary += f"- carbon-intensity: {arguments[CI]}\n"
     summary += f"- power-usage-effectiveness: {pue}\n"
-    summary += f"- min to max watts: {min_watts}W to {max_watts}W\n"
+    summary += f"- power model selected: {model_name}\n"
     summary += f"- memory-power-draw: {memory_coefficient}\n"
 
     if isinstance(arguments[CI], float):
@@ -406,7 +507,7 @@ def main(arguments):
 
     check_reserved_memory_flag = RESERVED_MEMORY in arguments
 
-    (cf, records) = calculate_carbon_footprint_ccf(tasks_by_hour, ci, pue, min_watts, max_watts, memory_coefficient, check_reserved_memory_flag)
+    (cf, records) = calculate_carbon_footprint_ccf(tasks_by_interval, ci, pue, model_name, memory_coefficient, check_reserved_memory_flag)
     cpu_energy, cpu_energy_pue, mem_energy, mem_energy_pue, carbon_emissions, node_memory_usage = cf
 
     summary += "\nCloud Carbon Footprint Method:\n"
@@ -440,13 +541,12 @@ def main(arguments):
     if TASK_FLAG:
         time = 0
 
-        for _, tasks in tasks_by_hour.items():
+        for _, tasks in tasks_by_interval.items():
             for task in tasks:
                 time += task.get_realtime()
 
         hours = time
         summary += f"\nTask Runtime: {hours}ms\n"
-
 
     # Report Summary
     if isinstance(ci, float):
@@ -454,8 +554,8 @@ def main(arguments):
     else:
         ci = arguments[CI]
 
-    write_summary_file("output", workflow + "-" + ci, summary)
-    write_trace_and_detailed_report("output", workflow + "-" + ci, records, summary)
+    write_summary_file("output", workflow + "-" + ci + "-" + model_name, summary)
+    write_task_trace_and_rank_report("output", workflow + "-" + ci + "-" + model_name, records)
 
     return (summary, carbon_emissions)
 
