@@ -108,17 +108,17 @@ def main(arguments):
 
     check_reserved_memory_flag = RESERVED_MEMORY in arguments
 
-    (ccf, records) = calculate_carbon_footprint_ccf(tasks_by_hour, ci, pue, min_watts, max_watts, memory_coefficient, check_reserved_memory_flag)
-    ccf_energy, ccf_energy_pue, ccf_memory, ccf_memory_pue, ccf_carbon_emissions, node_memory_usage = ccf
+    (cf, records) = calculate_carbon_footprint_ccf(tasks_by_hour, ci, pue, min_watts, max_watts, memory_coefficient, check_reserved_memory_flag)
+    cpu_energy, cpu_energy_pue, mem_energy, mem_energy_pue, carbon_emissions, node_memory_usage = cf
 
     summary += "\nCloud Carbon Footprint Method:\n"
-    summary += f"- Energy Consumption (exc. PUE): {ccf_energy}kWh\n"
-    summary += f"- Energy Consumption (inc. PUE): {ccf_energy_pue}kWh\n"
-    summary += f"- Memory Energy Consumption (exc. PUE): {ccf_memory}kWh\n"
-    summary += f"- Memory Energy Consumption (inc. PUE): {ccf_memory_pue}kWh\n"
-    summary += f"- Carbon Emissions: {ccf_carbon_emissions}gCO2e"
+    summary += f"- Energy Consumption (exc. PUE): {cpu_energy}kWh\n"
+    summary += f"- Energy Consumption (inc. PUE): {cpu_energy_pue}kWh\n"
+    summary += f"- Memory Energy Consumption (exc. PUE): {mem_energy}kWh\n"
+    summary += f"- Memory Energy Consumption (inc. PUE): {mem_energy_pue}kWh\n"
+    summary += f"- Carbon Emissions: {carbon_emissions}gCO2e"
 
-    print(f"Carbon Emissions (CCF): {ccf_carbon_emissions}gCO2e")
+    print(f"Carbon Emissions: {carbon_emissions}gCO2e")
 
     if check_reserved_memory_flag:
         total_res_mem_energy = 0
@@ -129,10 +129,10 @@ def main(arguments):
             total_res_mem_energy += res_mem_energy
             total_res_mem_emissions += res_mem_energy * ci_val
 
-        total_energy = total_res_mem_energy + ccf_energy + ccf_memory
+        total_energy = total_res_mem_energy + cpu_energy + mem_energy
         res_report = f"Reserved Memory Energy Consumption: {total_res_mem_energy}kWh"
         res_ems_report = f"Reserved Memory Carbon Emissions: {total_res_mem_emissions}gCO2e"
-        energy_split_report = f"% CPU [{((ccf_energy / total_energy) * 100):.2f}%] | % Memory [{(((total_res_mem_energy + ccf_memory) / total_energy) * 100):.2f}%]"
+        energy_split_report = f"% CPU [{((cpu_energy / total_energy) * 100):.2f}%] | % Memory [{(((total_res_mem_energy + mem_energy) / total_energy) * 100):.2f}%]"
         summary += f"\n{res_report}\n"
         summary += f"{res_ems_report}\n"
         summary += f"{energy_split_report}\n"
@@ -157,9 +157,9 @@ def main(arguments):
         ci = arguments[CI]
 
     write_summary_file("output", workflow + "-" + ci, summary)
-    write_trace_file("output", workflow + "-" + ci, records)
+    write_trace_and_detailed_report("output", workflow + "-" + ci, records, summary)
 
-    return (summary, ccf_carbon_emissions)
+    return (summary, carbon_emissions)
 
 
 def get_carbon_footprint(command):

@@ -4,6 +4,7 @@ from src.models.CarbonRecord import CarbonRecord
 class TraceRecord:
     def __init__(self, fields, data, delimiter):
         self._raw = self.get_raw_data_map(fields, data, delimiter)
+        self._id = self._raw['task_id']
         self._realtime = self._raw['realtime']
 
         if 'start' in self._raw:
@@ -76,7 +77,7 @@ class TraceRecord:
         return raw 
 
     def make_carbon_record(self):
-        return CarbonRecord(None, None, self._realtime, self._start, self._complete, self._cpu_count, None, self._cpu_usage, self._cpu_model, self._memory, self._name)
+        return CarbonRecord(None, None, self._id, self._realtime, self._start, self._complete, self._cpu_count, None, self._cpu_usage, self._cpu_model, self._memory, self._name)
 
     def parse_realtime(self):
         return self._realtime  # 5s, 4s e.g. 
