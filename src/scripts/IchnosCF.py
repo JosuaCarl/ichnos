@@ -1,5 +1,6 @@
 from src.models.TraceRecord import TraceRecord
 from src.models.CarbonRecord import CarbonRecord, HEADERS
+import src.utils.MathModels as MathModels
 import sys
 import datetime as time
 import copy
@@ -35,61 +36,26 @@ tdp_per_core = 11.875
 system_cores = 32
 node_mem_draw = 0.40268229166666664
 
-
 # Functions
-def baseline_ga(cpu_usage):
-    return tdp_per_core * (cpu_usage / 100)
+baseline_ga = MathModels.linear_model(tdp_per_core / 100, 0)
+linear_power_model = MathModels.linear_model((node_max_watts - node_min_watts) / 100, node_min_watts)
 
-def linear_power_model(cpu_usage):
-    return node_min_watts + (cpu_usage / 100) * (node_max_watts - node_min_watts)
-
-def model_gpg_13_ondemand(cpu_usage):
-    return ( 2.120111370111352e-05  * (cpu_usage ** 3) ) + ( -0.010314627039627027  * (cpu_usage ** 2) ) + ( 1.583392126392127  * (cpu_usage ** 1) ) + ( 49.00097902097905  )
-
-def model_gpg_13_ondemand_linear(cpu_usage):
-    return ( 0.7486757575757578  * (cpu_usage ** 1) ) + ( 60.465909090909086  )
-
-def model_gpg_14_performance(cpu_usage):
-    return ( 2.976560476560505e-05  * (cpu_usage ** 3) ) + ( -0.01055419580419587  * (cpu_usage ** 2) ) + ( 1.500831131831135  * (cpu_usage ** 1) ) + ( 51.75289044289049  )
-
-def model_gpg_14_performance_linear(cpu_usage):
-    return ( 0.7216363636363639  * (cpu_usage ** 1) ) + ( 61.95848484848483  )
-
-def model_gpg_14_powersave(cpu_usage):
-    return ( -1.612276612276791e-06  * (cpu_usage ** 3) ) + ( -0.004015695415695406  * (cpu_usage ** 2) ) + ( 0.9829405594405596  * (cpu_usage ** 1) ) + ( 49.289160839160864  )
-
-def model_gpg_14_powersave_linear(cpu_usage):
-    return ( 0.5664090909090908  * (cpu_usage ** 1) ) + ( 55.61742424242428  )
-
-def model_gpg_15_performance(cpu_usage):
-    return ( 1.10839160839165e-05  * (cpu_usage ** 3) ) + ( -0.008064724164724252  * (cpu_usage ** 2) ) + ( 1.5371985236985277  * (cpu_usage ** 1) ) + ( 55.72610722610721  )
-
-def model_gpg_15_performance_linear(cpu_usage):
-    return ( 0.8335848484848487  * (cpu_usage ** 1) ) + ( 65.72833333333334  )
-
-def model_gpg_15_powersave(cpu_usage):
-    return ( -3.1598031598030393e-06  * (cpu_usage ** 3) ) + ( -0.004507808857808884  * (cpu_usage ** 2) ) + ( 1.161149313649315  * (cpu_usage ** 1) ) + ( 52.835780885780885  )
-
-def model_gpg_15_powersave_linear(cpu_usage):
-    return ( 0.6810454545454548  * (cpu_usage ** 1) ) + ( 60.19469696969696  )
-
-def model_gpg_16_ondemand(cpu_usage):
-    return ( 2.1170681170680637e-05  * (cpu_usage ** 3) ) + ( -0.008939510489510433  * (cpu_usage ** 2) ) + ( 1.3387931882931874  * (cpu_usage ** 1) ) + ( 46.50426573426577  )
-
-def model_gpg_16_ondemand_linear(cpu_usage):
-    return ( 0.6413060606060605  * (cpu_usage ** 1) ) + ( 55.91227272727273  )
-
-def model_gpg_22_performance(cpu_usage):
-    return ( 0.0007414795389795361  * (cpu_usage ** 3) ) + ( -0.13460499222999192  * (cpu_usage ** 2) ) + ( 8.232617586117582  * (cpu_usage ** 1) ) + ( 131.4333566433568  )
-
-def model_gpg_22_performance_linear(cpu_usage):
-    return ( 1.6530484848484859  * (cpu_usage ** 1) ) + ( 193.20121212121217  )
-
-def model_gpg_22_powersave(cpu_usage):
-    return ( 0.0008557536907536887  * (cpu_usage ** 3) ) + ( -0.15424075369075355  * (cpu_usage ** 2) ) + ( 9.282093240093246  * (cpu_usage ** 1) )# + ( 110.46752913752906  )
-
-def model_gpg_22_powersave_linear(cpu_usage):
-    return ( 1.7994121212121201  * (cpu_usage ** 1) ) + ( 180.0912121212122  )
+model_gpg_13_ondemand = MathModels.cubic_model(2.120111370111352e-05, -0.010314627039627027, 1.583392126392127, 49.00097902097905)
+model_gpg_13_ondemand_linear = MathModels.linear_model(0.7486757575757578, 60.465909090909086)
+model_gpg_14_performance = MathModels.cubic_model(2.976560476560505e-05, -0.01055419580419587, 1.500831131831135, 51.75289044289049)
+model_gpg_14_performance_linear = MathModels.linear_model(0.7216363636363639, 61.95848484848483)
+model_gpg_14_powersave = MathModels.cubic_model(-1.612276612276791e-06, -0.004015695415695406, 0.9829405594405596, 49.289160839160864)
+model_gpg_14_powersave_linear = MathModels.linear_model(0.5664090909090908, 55.61742424242428)
+model_gpg_15_performance = MathModels.cubic_model(1.10839160839165e-05, -0.008064724164724252, 1.5371985236985277, 55.72610722610721)
+model_gpg_15_performance_linear = MathModels.linear_model(0.8335848484848487, 65.72833333333334)
+model_gpg_15_powersave = MathModels.cubic_model(-3.1598031598030393e-06, -0.004507808857808884, 1.161149313649315, 52.835780885780885)
+model_gpg_15_powersave_linear = MathModels.linear_model(0.6810454545454548, 60.19469696969696)
+model_gpg_16_ondemand = MathModels.cubic_model(2.1170681170680637e-05, -0.008939510489510433, 1.3387931882931874, 46.50426573426577)
+model_gpg_16_ondemand_linear = MathModels.linear_model(0.6413060606060605, 55.91227272727273)
+model_gpg_22_performance = MathModels.cubic_model(0.0007414795389795361, -0.13460499222999192, 8.232617586117582, 131.4333566433568)
+model_gpg_22_performance_linear = MathModels.linear_model(1.6530484848484859, 193.20121212121217)
+model_gpg_22_powersave = MathModels.cubic_model(0.0008557536907536887, -0.15424075369075355, 9.282093240093246, 110.46752913752906)
+model_gpg_22_powersave_linear = MathModels.linear_model(1.7994121212121201, 180.0912121212122)
 
 
 # map from argument to power model
