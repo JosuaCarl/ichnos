@@ -4,6 +4,7 @@ from src.utils.Parsers import parse_ci_intervals, parse_arguments
 from src.utils.FileWriters import write_summary_file, write_task_trace_and_rank_report
 import src.utils.MathModels as MathModels
 from src.Constants import *
+import json
 import sys
 
 # Node Specific Configuration
@@ -14,57 +15,18 @@ tdp_per_core = 11.875
 system_cores = 32
 node_mem_draw = 0.40268229166666664
 
-# Functions
-baseline_ga = MathModels.linear_model(tdp_per_core / 100, 0)
-linear_power_model = MathModels.linear_model((node_max_watts - node_min_watts) / 100, node_min_watts)
-
-model_gpg_13_ondemand = MathModels.cubic_model(2.120111370111352e-05, -0.010314627039627027, 1.583392126392127, 49.00097902097905)
-model_gpg_13_ondemand_linear = MathModels.linear_model(0.7486757575757578, 60.465909090909086)
-model_gpg_14_performance = MathModels.cubic_model(2.976560476560505e-05, -0.01055419580419587, 1.500831131831135, 51.75289044289049)
-model_gpg_14_performance_linear = MathModels.linear_model(0.7216363636363639, 61.95848484848483)
-model_gpg_14_powersave = MathModels.cubic_model(-1.612276612276791e-06, -0.004015695415695406, 0.9829405594405596, 49.289160839160864)
-model_gpg_14_powersave_linear = MathModels.linear_model(0.5664090909090908, 55.61742424242428)
-model_gpg_15_performance = MathModels.cubic_model(1.10839160839165e-05, -0.008064724164724252, 1.5371985236985277, 55.72610722610721)
-model_gpg_15_performance_linear = MathModels.linear_model(0.8335848484848487, 65.72833333333334)
-model_gpg_15_powersave = MathModels.cubic_model(-3.1598031598030393e-06, -0.004507808857808884, 1.161149313649315, 52.835780885780885)
-model_gpg_15_powersave_linear = MathModels.linear_model(0.6810454545454548, 60.19469696969696)
-model_gpg_16_ondemand = MathModels.cubic_model(2.1170681170680637e-05, -0.008939510489510433, 1.3387931882931874, 46.50426573426577)
-model_gpg_16_ondemand_linear = MathModels.linear_model(0.6413060606060605, 55.91227272727273)
-model_gpg_22_performance = MathModels.cubic_model(0.0007414795389795361, -0.13460499222999192, 8.232617586117582, 131.4333566433568)
-model_gpg_22_performance_linear = MathModels.linear_model(1.6530484848484859, 193.20121212121217)
-model_gpg_22_powersave = MathModels.cubic_model(0.0008557536907536887, -0.15424075369075355, 9.282093240093246, 110.46752913752906)
-model_gpg_22_powersave_linear = MathModels.linear_model(1.7994121212121201, 180.0912121212122)
-
-
 # map from argument to power model
 def get_power_model(model_name):
     print(f'Model Name Provided: {model_name}')
 
-    models = {
-        "linear": linear_power_model, 
-        "gpg_13_ondemand": model_gpg_13_ondemand,
-        "gpg_13_ondemand_linear": model_gpg_13_ondemand_linear,
-        "gpg_14_performance": model_gpg_14_performance,
-        "gpg_14_performance_linear": model_gpg_14_performance_linear,
-        "gpg_14_powersave": model_gpg_14_powersave,
-        "gpg_14_powersave_linear": model_gpg_14_powersave_linear,
-        "gpg_15_performance": model_gpg_15_performance,
-        "gpg_15_performance_linear": model_gpg_15_performance_linear,
-        "gpg_15_powersave": model_gpg_15_powersave,
-        "gpg_15_powersave_linear": model_gpg_15_powersave_linear,
-        "gpg_16_ondemand": model_gpg_16_ondemand,
-        "gpg_16_ondemand_linear": model_gpg_16_ondemand_linear,
-        "gpg_22_performance": model_gpg_22_performance,
-        "gpg_22_performance_linear": model_gpg_22_performance_linear,
-        "gpg_22_powersave": model_gpg_22_powersave,
-        "gpg_22_powersave_linear": model_gpg_22_powersave_linear,
-        "baseline": baseline_ga
-    }
+    with open('node_config_models/gpgnodes.json') as nodes_json_data:
+        models = json.load(nodes_json_data)
 
-    if model_name not in models:
-        return linear_power_model
-    else:
-        return models[model_name]
+        if model_name not in models:
+            linear_power_model = MathModels.linear_model((node_max_watts - node_min_watts) / 100, node_min_watts)
+            return linear_power_model
+        else:
+            return MathModels.polynomial_model(models[model_name])
 
 # Estimate Energy Consumption
 def estimate_task_energy_consumption_ccf(task: CarbonRecord, model, model_name, memory_coefficient):
