@@ -1,30 +1,10 @@
 from src.models.TraceRecord import TraceRecord
 from src.models.CarbonRecord import CarbonRecord, HEADERS
 from src.utils.TimeUtils import to_timestamp, extract_tasks_by_interval
+from src.utils.Parsers import parse_ci_intervals, parse_arguments
 import src.utils.MathModels as MathModels
+from src.Constants import *
 import sys
-
-# Default Values
-DEFAULT = "default"
-FILE = "csv"
-DELIMITER = ","
-TRACE = "trace"
-CI = "ci"
-PUE = "pue"
-INTERVAL = "interval"
-CORE_POWER_DRAW = "core-power-draw"
-MEMORY_COEFFICIENT = "memory-coefficient"
-MIN_WATTS = "min-watts"
-MAX_WATTS = "max-watts"
-GA = "GA"
-CCF = "CCF"
-BOTH = "BOTH"
-DEFAULT_PUE_VALUE = 1.0  # Disregard PUE if 1.0
-DEFAULT_MEMORY_POWER_DRAW = 0.392  # W/GB
-RESERVED_MEMORY = "reserved-memory"
-NUM_OF_NODES = "num-of-nodes"
-TASK_FLAG = True
-MODEL_NAME = 'model-name' 
 
 # Node Specific Configuration
 # GPG Node 13 - Governor [ondemand]
@@ -85,55 +65,6 @@ def get_power_model(model_name):
         return linear_power_model
     else:
         return models[model_name]
-
-def get_ci_file_data(filename):
-    with open(filename, 'r') as file:
-        raw = file.readlines()
-        header = [val.strip() for val in raw[0].split(",")]
-        data = raw[1:]
-
-    return (header, data)
-
-
-def parse_ci_intervals(filename):
-    (header, data) = get_ci_file_data(filename)
-
-    date_i = header.index("date")
-    start_i = header.index("start")
-    value_i = header.index("actual")
-
-    ci_map = {}
-
-    for row in data:
-        parts = row.split(",")
-        date = parts[date_i]
-        month_day = '/'.join([val.zfill(2) for val in date.split('-')[-2:]])
-        key = month_day + '-' + parts[start_i]
-        value = float(parts[value_i])
-        ci_map[key] = value
-
-    return ci_map
-
-
-def parse_trace_file(filepath):
-    with open(filepath, 'r') as file:
-        lines = [line.rstrip() for line in file]
-
-    header = lines[0]
-    records = []
-
-    for line in lines[1:]:
-        trace_record = TraceRecord(header, line, DELIMITER)
-        records.append(trace_record)
-
-    return records
-
-
-def print_usage_exit():
-    # Ichnos CF Usage: provide trace, ci, power model (defaults to linear range), interval defaults to 60 minutes, pue defaults to 1.0, memory draw defaults to 0.392
-    usage = "Ichnos: python -m src.scripts.IchnosCF <trace-name> <ci-value|ci-file-name> <power_model> <? interval=60> <? pue=1.0> <? memory-coeff=0.392>"
-    print(usage)
-    exit(-1)
 
 # Estimate Energy Consumption
 def estimate_task_energy_consumption_ccf(task: CarbonRecord, model, model_name, memory_coefficient):
@@ -208,47 +139,6 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval, ci, pue: float, mo
                 records.append(task)
 
     return ((total_energy, total_energy_pue, total_memory_energy, total_memory_energy_pue, total_carbon_emissions, node_memory_used), records)
-
-
-def check_if_float(value):
-    return value.replace('.', '').isnumeric()
-
-
-def parse_arguments(args):
-    if len(args) != 3 and len(args) != 4 and len(args) != 6 and len(args) != 8:
-        print_usage_exit()
-
-    arguments = {}
-    arguments[TRACE] = args[0]
-
-    if check_if_float(args[1]):
-        arguments[CI] = float(args[1])
-    else:
-        arguments[CI] = args[1]
-
-    arguments[MODEL_NAME] = args[2]
-
-    if len(args) == 4:
-        arguments[INTERVAL] = int(args[3])
-        arguments[PUE] = DEFAULT_PUE_VALUE
-        arguments[MEMORY_COEFFICIENT] = DEFAULT_MEMORY_POWER_DRAW
-    elif len(args) == 6:
-        arguments[INTERVAL] = int(args[3])
-        arguments[PUE] = float(args[4])
-        arguments[MEMORY_COEFFICIENT] = float(args[5])
-    elif len(args) == 8:
-        arguments[INTERVAL] = int(args[3])
-        arguments[PUE] = float(args[4])
-        arguments[MEMORY_COEFFICIENT] = float(args[5])
-        arguments[RESERVED_MEMORY] = float(args[6])
-        arguments[NUM_OF_NODES] = int(args[7])
-    else:
-        arguments[INTERVAL] = 60
-        arguments[PUE] = DEFAULT_PUE_VALUE
-        arguments[MEMORY_COEFFICIENT] = DEFAULT_MEMORY_POWER_DRAW
-
-    return arguments
-
 
 def write_trace_file(folder, trace_file, records):
     output_file_name = f"{folder}/{trace_file}-trace.csv"

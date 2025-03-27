@@ -2,7 +2,7 @@ import sys
 
 from src.models.CarbonRecord import CarbonRecord
 from src.Constants import *
-from src.utils.Parsers import parse_arguments, parse_ci_intervals
+from src.utils.Parsers import parse_arguments_CarbonFootprint, parse_ci_intervals
 from src.utils.TimeUtils import extract_tasks_by_hour, to_timestamp
 from src.utils.FileWriters import write_trace_and_detailed_report, write_summary_file
 
@@ -163,7 +163,7 @@ def main(arguments):
 
 
 def get_carbon_footprint(command):
-    arguments = parse_arguments(command.split(' '))
+    arguments = parse_arguments_CarbonFootprint(command.split(' '))
     return main(arguments)
 
 
@@ -171,5 +171,5 @@ def get_carbon_footprint(command):
 if __name__ == '__main__':
     # Parse Arguments
     args = sys.argv[1:]
-    arguments = parse_arguments(args)
+    arguments = parse_arguments_CarbonFootprint(args)
     main(arguments)
