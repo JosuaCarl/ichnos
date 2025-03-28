@@ -1,31 +1,16 @@
 from src.models.TraceRecord import TraceRecord
 from src.models.CarbonRecord import CarbonRecord
 from src.WorkflowNameConstants import *
-from src.Constants import FILE, DELIMITER
+from src.Constants import FILE
 from src.utils.TimeUtils import to_timestamp, get_hours, extract_tasks_by_hour
 from src.utils.Parsers import parse_ci_intervals
+from src.utils.MathModels import linear_model
+from src.utils.Usage import print_usage_exit_TemporalInterrupt
 
 import sys
 import numpy as np
 
-
-def linear_power_model(cpu_usage, min_watts, max_watts):
-    return min_watts + cpu_usage * (max_watts - min_watts)
-
-
-def print_usage_exit():
-    usage = "$ python -m src.scripts.TemporalInterrupt <ci-file-name> <pue> <memory_coefficient> <min-watts> <max-watts>"
-    example = "$ python -m src.scripts.TemporalInterrupt ci 1.0 0.392 65 219"
-
-    print(usage)
-    print(example)
-    exit(-1)
-
-
-def get_carbon_record(record: TraceRecord):
-    return record.make_carbon_record()
-
-
+linear_power_model = lambda min, max: linear_model((max - min), min)
 
 def calculate_carbon_footprint_for_task(task: CarbonRecord, min_watts, max_watts, memory_coefficient):
     # Time (h)
@@ -37,12 +22,11 @@ def calculate_carbon_footprint_for_task(task: CarbonRecord, min_watts, max_watts
     # Memory (GB)
     memory = task.get_memory() / 1073741824  # bytes to GB
     # Core Energy Consumption (without PUE)
-    core_consumption = time * linear_power_model(cpu_usage, min_watts, max_watts) * 0.001  # convert from W to kW
+    core_consumption = time * linear_power_model(min_watts, max_watts)(cpu_usage) * 0.001  # convert from W to kW
     # Memory Power Consumption (without PUE)
     memory_consumption = memory * memory_coefficient * time * 0.001  # convert from W to kW
     # Overall and Memory Consumption (kW) (without PUE)
     return (core_consumption, memory_consumption)
-
 
 def calculate_carbon_footprint(tasks_by_hour, ci, pue: float, min_watts, max_watts, memory_coefficient):
     total_energy = 0.0
@@ -150,14 +134,13 @@ def main(workflows, ci, min_watts, max_watts, pue, memory_coefficient):
         for result in results:
             f.write(f'{result}\n')
 
-
 # Main Script
 if __name__ == '__main__':
     # Parse Arguments
     arguments = sys.argv[1:]
 
     if len(arguments) != 5:
-        print_usage_exit()
+        print_usage_exit_TemporalInterrupt()
 
     filename = arguments[0]  # list of workflow traces
     ci_filename = f"data/intensity/{arguments[0]}.{FILE}"
