@@ -3,51 +3,10 @@ from src.models.CarbonRecord import CarbonRecord
 from src.WorkflowNameConstants import *
 from src.Constants import FILE, DELIMITER
 from src.utils.TimeUtils import to_timestamp, get_hours, extract_tasks_by_hour
+from src.utils.Parsers import parse_ci_intervals
 
 import sys
 import numpy as np
-
-def get_ci_file_data(filename):
-    with open(filename, 'r') as file:
-        raw = file.readlines()
-        header = [val.strip() for val in raw[0].split(",")]
-        data = raw[1:]
-
-    return (header, data)
-
-
-def parse_ci_intervals(filename):
-    (header, data) = get_ci_file_data(filename)
-
-    date_i = header.index("date")
-    start_i = header.index("start")
-    value_i = header.index("actual")
-
-    ci_map = {}
-
-    for row in data:
-        parts = row.split(",")
-        date = parts[date_i]
-        month_day = '/'.join([val.zfill(2) for val in date.split('-')[-2:]])
-        key = month_day + '-' + parts[start_i]
-        value = float(parts[value_i])
-        ci_map[key] = value
-
-    return ci_map
-
-
-def parse_trace_file(filepath):
-    with open(filepath, 'r') as file:
-        lines = [line.rstrip() for line in file]
-
-    header = lines[0]
-    records = []
-
-    for line in lines[1:]:
-        trace_record = TraceRecord(header, line, DELIMITER)
-        records.append(trace_record)
-
-    return records
 
 
 def linear_power_model(cpu_usage, min_watts, max_watts):
