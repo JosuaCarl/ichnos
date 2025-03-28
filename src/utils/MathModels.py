@@ -16,3 +16,9 @@ def polynomial_model(coefficients):
 linear_model = lambda a, b: polynomial_model([a, b])
 quadratic_model = lambda a, b, c: polynomial_model([a, b, c])
 cubic_model = lambda a, b, c, d: polynomial_model([a, b, c, d])
+
+def min_max_linear_power_model(min, max):
+	return linear_model((max - min) / 100, min)
+
+def baseline_linear_power_model(tdp_per_core):
+	return linear_model(tdp_per_core/100 , 0)

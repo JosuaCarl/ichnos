@@ -7,35 +7,61 @@ from src.Constants import *
 import json
 import sys
 
-# Node Specific Configuration
-# GPG Node 13 - Governor [ondemand]
-node_min_watts = 48.26
-node_max_watts = 124.96333333333332
-tdp_per_core = 11.875
-system_cores = 32
-node_mem_draw = 0.40268229166666664
-
-# map from argument to power model
+"""
+Model name format: gpg_<node_id>_<governor>_<model_name>
+where governor is either 'ondemand', 'performance', or 'powersave'
+and model_name is either 'linear', 'minmax', 'cubic', or 'baseline'"
+"""
 def get_power_model(model_name):
     print(f'Model Name Provided: {model_name}')
 
     with open('node_config_models/gpgnodes.json') as nodes_json_data:
         models = json.load(nodes_json_data)
 
-        if model_name not in models:
-            linear_power_model = MathModels.linear_model((node_max_watts - node_min_watts) / 100, node_min_watts)
-            return linear_power_model
-        else:
-            return MathModels.polynomial_model(models[model_name])
+        model_found = False
+        # Get the model data out of the name
+        if model_name.startswith('gpg_'):
+            model_data = model_name.split('_')
+            if len(model_data) != 4:
+                print("Unrecognised model name format. Format should be gpg_<node_id>_<governor>_<model_name>.")
+                print("E.g. gpg_13_ondemand_minmax | gpg_13_ondemand_linear | gpg_13_ondemand_cubic | gpg_13_performance_minmax")
+                print("Exiting...")
+                exit(-1)
+
+            node_id = "gpg_" + model_data[1]
+            governor = model_data[2]
+            model_type = model_data[3]
+
+            # TODO: Refactor this to be more readable
+            model_found = node_id in models and governor in models[node_id] and (model_type in models[node_id][governor] or (model_type == 'minmax' and 'min_watts' in models[node_id][governor]) and 'max_watts' in models[node_id][governor])
+
+        if not model_found:
+            print("Unrecognised model name. Using default gpg_13_ondemand_minmax model.")
+            node_id = "gpg_13"
+            governor = "ondemand"
+            model_type = "minmax"
+
+        if model_type == 'minmax':
+            min_watts = models[node_id][governor]['min_watts']
+            max_watts = models[node_id][governor]['max_watts']
+            return MathModels.min_max_linear_power_model(min_watts, max_watts)
+        elif model_type == 'baseline':
+            tdp_per_core = models[node_id][governor]['tdp_per_core']
+            return MathModels.baseline_power_model(tdp_per_core)
+
+        return MathModels.polynomial_model(models[node_id][governor][model_type])
 
 # Estimate Energy Consumption
 def estimate_task_energy_consumption_ccf(task: CarbonRecord, model, model_name, memory_coefficient):
+    # TODO: Revise this default value (this is for GPG Node 13 OnDemand)
+    default_system_cores = 32
+
     # Time (h)
     time = task.get_realtime() / 1000 / 3600  # convert from ms to h
     # Number of Cores (int)
     no_cores = task.get_core_count()
     # CPU Usage (%)
-    cpu_usage = task.get_cpu_usage() / system_cores  # nextflow reports as overall utilisation
+    cpu_usage = task.get_cpu_usage() / default_system_cores  # nextflow reports as overall utilisation
     # Memory (GB)
     memory = task.get_memory() / 1073741824  # memory reported in bytes  https://www.nextflow.io/docs/latest/metrics.html 
     # Core Energy Consumption (without PUE)
@@ -103,12 +129,15 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval, ci, pue: float, mo
     return ((total_energy, total_energy_pue, total_memory_energy, total_memory_energy_pue, total_carbon_emissions, node_memory_used), records)
 
 def main(arguments):
+    # TODO: Revise this default value (this is for GPG Node 13 OnDemand)
+    default_node_mem_draw = 0.40268229166666664
+
     # Data
     workflow = arguments[TRACE]
     pue = arguments[PUE]
     interval = arguments[INTERVAL]
     model_name = arguments[MODEL_NAME]
-    memory_coefficient = node_mem_draw
+    memory_coefficient = default_node_mem_draw
 
     if memory_coefficient == None:
         memory_coefficient = DEFAULT_MEMORY_POWER_DRAW
