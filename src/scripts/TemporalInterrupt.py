@@ -39,7 +39,9 @@ WORKFLOWS_S = [
     'nanoseq-2',
     'nanoseq-3'
 ]
-
+WORKFLOWS_TEST = [
+    'test'
+]
 
 # Functions
 def to_timestamp(ms):
@@ -94,8 +96,8 @@ def linear_power_model(cpu_usage, min_watts, max_watts):
 
 
 def print_usage_exit():
-    usage = "carbon-footprint $ python -m src.scripts.ExtractTimeline <ci-file-name> <min-watts> <max-watts>"
-    example = "carbon-footprint $ python -m src.scripts.ExtractTimeline ci-test 65 219"
+    usage = "$ python -m src.scripts.TemporalInterrupt <ci-file-name> <pue> <memory_coefficient> <min-watts> <max-watts>"
+    example = "$ python -m src.scripts.TemporalInterrupt ci 1.0 0.392 65 219"
 
     print(usage)
     print(example)
@@ -361,4 +363,4 @@ if __name__ == '__main__':
     max_watts = int(arguments[4])
     ci = parse_ci_intervals(ci_filename)
 
-    main(WORKFLOWS_S, ci, min_watts, max_watts, pue, memory_coefficient)
+    main(WORKFLOWS_TEST, ci, min_watts, max_watts, pue, memory_coefficient)
