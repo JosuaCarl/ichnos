@@ -1,3 +1,5 @@
+from src.utils.Usage import print_usage_exit_Convertor as print_usage_exit
+
 import sys
 import re
 from datetime import datetime
@@ -46,23 +48,6 @@ def create_trace_file(trace_filepath, delim, offset, new_filename):
     print(f"[Convertor] Find converted trace file [{new_filename}]")
 
     return new_filename.split("/")[-1]
-
-
-def print_usage_exit():
-    usage = "[Convertor] $ Expected Use - Arguments Format: <change-command> <trace-file-name.end> <delimiter> <direction|new-start> <shift|original-start> <output-name>"
-    example_time = "[Convertor] $ adjust file by days-hours-minutes: change-time test.csv , + 00-06-30 changed"
-    example_stamp = "[Convertor] $ adjust file by ms: change-ms test.csv , + 23400000 changed"
-    example_start = "[Convertor] $ adjust file start time using date: change-start test.csv , 2024-03-12:09-00 2024-01-01:10-00 changed"
-    example_start_ms = "[Convertor] $ adjust file start time using ms: change-start-ms test.csv , 2024-03-12:09-00 1701083201729 changed"
-
-    print(usage)
-    print(example_time)
-    print(example_stamp)
-    print(example_start)
-    print(example_start_ms)
-
-    exit(-1)
-
 
 def to_timestamp_from_date(time):
     stamp = datetime.strptime(time, "%Y-%m-%d:%H-%M")

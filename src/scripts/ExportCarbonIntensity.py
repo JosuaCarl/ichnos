@@ -3,6 +3,8 @@
 
 
 # Imports
+from src.utils.Usage import print_usage_exit_ExportCarbonIntensity as print_usage_exit
+
 import sys
 import re
 import matplotlib.pyplot as plt
@@ -125,14 +127,6 @@ def export_carbon_intensity(dfs, settings):
     print(f"[ExportCarbonIntensity] Successfully Exported CI Data to [{output_file}]")
 
     return output_file
-
-
-def print_usage_exit():
-    usage = "[ExportCarbonIntensity] Expected Usage: py ExportCarbonIntensity.py <YYYY-MM-DD> <YYYY-MM-DD> <region>"
-    example = "[ExportCarbonIntensity] Example Use: py ExportCarbonIntensity.py 2023-11-26 2023-11-28 de"
-    print(usage)
-    print(example)
-    exit(-1)
 
 
 def parse_command(command):

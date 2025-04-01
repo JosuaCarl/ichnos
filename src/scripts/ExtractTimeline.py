@@ -1,5 +1,7 @@
 from src.models.TraceRecord import TraceRecord
 from src.models.CarbonRecord import CarbonRecord, HEADERS
+from src.utils.Usage import print_usage_exit_ExtractTimeline as print_usage_exit
+
 import sys
 import configparser
 import datetime as time
@@ -29,14 +31,6 @@ def parse_trace_file(filepath):
 
     return records
 
-
-def print_usage_exit():
-    usage = "carbon-footprint $ python -m src.scripts.ExtractTimeline <trace-file-name>"
-    example = "carbon-footprint $ python -m src.scripts.ExtractTimeline test"
-
-    print(usage)
-    print(example)
-    exit(-1)
 
 
 def get_timeline_data(record):
