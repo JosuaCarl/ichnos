@@ -13,13 +13,13 @@ def linear_power_model(cpu_usage, min_watts, max_watts):
 # Estimate Energy Consumption using CCF Methodology
 def estimate_task_energy_consumption_ccf(task: CarbonRecord, min_watts, max_watts, memory_coefficient):
     # Time (h)
-    time = task.get_realtime() / 1000 / 3600  # convert from ms to h
+    time = task.realtime / 1000 / 3600  # convert from ms to h
     # Number of Cores (int)
-    no_cores = task.get_core_count()
+    no_cores = task.core_count
     # CPU Usage (%)
-    cpu_usage = task.get_cpu_usage() / (100.0 * no_cores)
+    cpu_usage = task.cpu_usage / (100.0 * no_cores)
     # Memory (GB)
-    memory = task.get_memory() / 1073741824  # memory reported in bytes  https://www.nextflow.io/docs/latest/metrics.html 
+    memory = task.memory / 1073741824  # memory reported in bytes  https://www.nextflow.io/docs/latest/metrics.html 
     # Core Energy Consumption (without PUE)
     core_consumption = time * linear_power_model(cpu_usage, min_watts, max_watts) * 0.001  # convert from W to kW
     # Memory Power Consumption (without PUE)
@@ -56,8 +56,8 @@ def calculate_carbon_footprint_ccf(tasks_by_hour, ci, pue: float, min_watts, max
                 ends = []
 
                 for task in tasks:
-                    starts.append(int(task.get_start()))
-                    ends.append(int(task.get_complete()))
+                    starts.append(int(task.start))
+                    ends.append(int(task.complete))
 
                 earliest = min(starts)
                 latest = max(ends)
@@ -69,9 +69,9 @@ def calculate_carbon_footprint_ccf(tasks_by_hour, ci, pue: float, min_watts, max
                 energy_pue = energy * pue
                 memory_pue = memory * pue
                 task_footprint = (energy_pue + memory_pue) * ci_val
-                task.set_energy(energy_pue)
-                task.set_co2e(task_footprint)
-                task.set_avg_ci(ci_val)
+                task.energy = energy_pue
+                task.co2e = task_footprint
+                task.avg_ci = ci_val
                 total_energy += energy
                 total_energy_pue += energy_pue
                 total_memory_energy += memory
@@ -144,7 +144,7 @@ def main(arguments):
 
         for _, tasks in tasks_by_hour.items():
             for task in tasks:
-                time += task.get_realtime()
+                time += task.realtime
 
         hours = time
         summary += f"\nTask Runtime: {hours}ms\n"

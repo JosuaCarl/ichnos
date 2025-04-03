@@ -1,97 +1,25 @@
+from dataclasses import dataclass, field
+from typing import Any, Optional
+
 HEADERS = "name,id,co2e,energy,avg_ci,realtime,cpu_model,cpu_count,cpu_powerdraw,cpu_usage,memory,memory_powerdraw"
 
+@dataclass(unsafe_hash=True)
 class CarbonRecord:
-    def __init__(self, energy, co2e, id, realtime, start, complete, core_count, 
-                 core_powerdraw, cpu_usage, cpu_model, memory, name):
-        self._energy = energy
-        self._co2e = co2e
-        self._realtime = realtime
-        self._id = id
-
-        if start is not None and complete is not None:
-            self._start = start
-            self._complete = complete
-        else:
-            self._start = None
-            self._complete = None
-
-        self._core_count = core_count
-        self._core_powerdraw = core_powerdraw
-        self._cpu_usage = cpu_usage
-        self._cpu_model = cpu_model
-        self._memory = memory
-        self._name = name
-
-        self._avg_ci = None
-
-    def get_name(self):
-        return self._name
-
-    def get_id(self):
-        return self._id
-
-    def get_realtime(self):
-        return self._realtime
-
-    def set_realtime(self, realtime):
-        self._realtime = realtime
-
-    def get_core_count(self):
-        return self._core_count
-
-    def get_start(self):
-        return self._start
-
-    def set_start(self, start):
-        self._start = start
-
-    def get_complete(self):
-        return self._complete
-
-    def set_complete(self, complete):
-        self._complete = complete
-
-    def get_cpu_powerdraw(self):
-        return self._core_powerdraw
-
-    def set_cpu_powerdraw(self, core_powerdraw):
-        self._core_powerdraw = core_powerdraw
-
-    def get_cpu_usage(self):
-        return self._cpu_usage
-
-    def get_memory(self):
-        return self._memory
-
-    def get_memory_powerdraw(self):
-        return self._memory_powerdraw
-
-    def set_memory_powerdraw(self, memory_powerdraw):
-        self._memory_powerdraw = memory_powerdraw
-
-    def get_energy(self):
-        return self._energy
-
-    def get_co2e(self):
-        return self._co2e
-
-    def get_cpu_model(self):
-        return self._cpu_model
-
-    def set_energy(self, energy):
-        self._energy = energy
-
-    def set_co2e(self, co2e):
-        self._co2e = co2e
-
-    def get_avg_ci(self):
-        return self._avg_ci
-
-    def set_avg_ci(self, ci):
-        self._avg_ci = ci
-
-    def __str__(self):
-        if not hasattr(self, '_memory_powerdraw'):
-            self._memory_powerdraw = None
-
-        return f"{self._name},{self._id},{self._co2e},{self._energy},{self._avg_ci},{self._realtime},{self._cpu_model},{self._core_count},{self._core_powerdraw},{self._cpu_usage},{self._memory},{self._memory_powerdraw}"
+    energy: Optional[float]
+    co2e: Optional[float]
+    id: Any
+    realtime: float
+    start: Optional[Any] = None
+    complete: Optional[Any] = None
+    core_count: int = 0
+    cpu_powerdraw: Optional[float] = None
+    cpu_usage: float = 0.0
+    cpu_model: str = ""
+    memory: Optional[float] = None
+    name: str = ""
+    avg_ci: Optional[float] = None
+    memory_powerdraw: Optional[float] = field(default=None, repr=False)
+    
+    def __str__(self) -> str:
+        return f"{self.name},{self.id},{self.co2e},{self.energy},{self.avg_ci},{self.realtime},"\
+               f"{self.cpu_model},{self.core_count},{self.cpu_powerdraw},{self.cpu_usage},{self.memory},{self.memory_powerdraw}"

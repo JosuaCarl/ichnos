@@ -57,13 +57,13 @@ def estimate_task_energy_consumption_ccf(task: CarbonRecord, model, model_name, 
     default_system_cores = 32
 
     # Time (h)
-    time = task.get_realtime() / 1000 / 3600  # convert from ms to h
+    time = task.realtime / 1000 / 3600  # convert from ms to h
     # Number of Cores (int)
-    no_cores = task.get_core_count()
+    no_cores = task.core_count
     # CPU Usage (%)
-    cpu_usage = task.get_cpu_usage() / default_system_cores  # nextflow reports as overall utilisation
+    cpu_usage = task.cpu_usage / default_system_cores  # nextflow reports as overall utilisation
     # Memory (GB)
-    memory = task.get_memory() / 1073741824  # memory reported in bytes  https://www.nextflow.io/docs/latest/metrics.html 
+    memory = task.memory / 1073741824  # memory reported in bytes  https://www.nextflow.io/docs/latest/metrics.html 
     # Core Energy Consumption (without PUE)
     core_consumption = time * model(cpu_usage) * 0.001  # convert from W to kW
     if (model_name == 'baseline'):
@@ -103,8 +103,8 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval, ci, pue: float, mo
                 ends = []
 
                 for task in tasks:
-                    starts.append(int(task.get_start()))
-                    ends.append(int(task.get_complete()))
+                    starts.append(int(task.start))
+                    ends.append(int(task.complete))
 
                 earliest = min(starts)
                 latest = max(ends)
@@ -116,9 +116,9 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval, ci, pue: float, mo
                 energy_pue = energy * pue
                 memory_pue = memory * pue
                 task_footprint = (energy_pue + memory_pue) * ci_val
-                task.set_energy(energy_pue)
-                task.set_co2e(task_footprint)
-                task.set_avg_ci(ci_val)
+                task.energy = energy_pue
+                task.co2e = task_footprint
+                task.avg_ci = ci_val
                 total_energy += energy
                 total_energy_pue += energy_pue
                 total_memory_energy += memory
@@ -147,7 +147,7 @@ def main(arguments):
     for curr_interval, records in tasks_by_interval.items():
         print(f'interval: {to_timestamp(curr_interval)}')
         if len(records) > 0:
-            print(f'tasks: {", ".join([record.get_id() for record in records])}')
+            print(f'tasks: {", ".join([record.id for record in records])}')
 
     summary = ""
     summary += "Carbon Footprint Trace:\n"
@@ -200,7 +200,7 @@ def main(arguments):
 
         for _, tasks in tasks_by_interval.items():
             for task in tasks:
-                time += task.get_realtime()
+                time += task.realtime
 
         hours = time
         summary += f"\nTask Runtime: {hours}ms\n"

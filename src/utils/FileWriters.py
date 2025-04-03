@@ -7,7 +7,7 @@ detailed trace reports, and any other file-based outputs required by the project
 import os
 import logging
 from typing import Iterable, Any
-from src.models.CarbonRecord import HEADERS
+from src.models.CarbonRecord import HEADERS, CarbonRecord
 
 def write_trace_file(folder: str, trace_file: str, records: Iterable[Any]) -> None:
     """
@@ -45,7 +45,7 @@ def write_summary_file(folder: str, trace_file: str, content: str) -> None:
         logging.error("Failed to write summary file %s: %s", output_file_name, e)
         raise
 
-def write_trace_and_detailed_report(folder: str, trace_file: str, records: Iterable[Any], content: str) -> None:
+def write_trace_and_detailed_report(folder: str, trace_file: str, records: Iterable[CarbonRecord], content: str) -> None:
     """
     Write both detailed trace and summary reports.
     
@@ -57,13 +57,13 @@ def write_trace_and_detailed_report(folder: str, trace_file: str, records: Itera
     output_file_name = f"{folder}/{trace_file}-detailed-summary.txt"
     whole_tasks = {}
     for record in records:
-        curr_id = record.get_id()
+        curr_id = record.id
         if curr_id in whole_tasks:
             present = whole_tasks[curr_id]
-            whole_tasks[curr_id].set_co2e(present.get_co2e() + record.get_co2e())
-            whole_tasks[curr_id].set_energy(present.get_energy() + record.get_energy())
-            whole_tasks[curr_id].set_avg_ci(f'{present.get_avg_ci()}|{record.get_avg_ci()}')
-            whole_tasks[curr_id].set_realtime(present.get_realtime() + record.get_realtime())
+            present.co2e += record.co2e
+            present.energy += record.energy
+            present.avg_ci = f'{present.avg_ci}|{record.avg_ci}'
+            present.realtime += record.realtime
         else:
             whole_tasks[curr_id] = record
     records = whole_tasks.values()
@@ -72,23 +72,23 @@ def write_trace_and_detailed_report(folder: str, trace_file: str, records: Itera
     except Exception as e:
         logging.error("Error writing trace file from detailed report: %s", e)
         raise
-    sorted_records = sorted(records, key=lambda r: (-r.get_co2e(), -r.get_energy(), -r.get_realtime()))
-    sorted_records_par = sorted(records, key=lambda r: (-r.get_energy(), -r.get_realtime()))
+    sorted_records = sorted(records, key=lambda r: (-r.co2e, -r.energy, -r.realtime))
+    sorted_records_par = sorted(records, key=lambda r: (-r.energy, -r.realtime))
     try:
         with open(output_file_name, "w") as file:
             file.write(f'Detailed Report for {trace_file}\n')
             file.write('\nTop 10 Tasks - ranked by footprint, energy and realtime:\n')
             for record in sorted_records[:10]:
-                file.write(record.get_name() + ':' + record.get_id() + '\n')
+                file.write(record.name + ':' + record.id + '\n')
             file.write('\nTop 10 Tasks - ranked by energy and realtime:\n')
             for record in sorted_records_par[:10]:
-                file.write(record.get_name() + ':' + record.get_id() + '\n')
+                file.write(record.name + ':' + record.id + '\n')
             diff = set(sorted_records[:10]).difference(set(sorted_records_par[:10]))
             if len(diff) == 0:
                 file.write('\nThe top 10 tasks with the largest energy and realtime have the largest footprint.\n')
             else:
                 file.write('\nThe following tasks have one of the top 10 largest footprints, but not the highest energy or realtime...\n')
-                file.write(', '.join([record.get_name() + ':' + record.get_id() for record in diff]))
+                file.write(', '.join([record.name + ':' + record.id for record in diff]))
     except Exception as e:
         logging.error("Failed to write detailed report file %s: %s", output_file_name, e)
         raise
@@ -106,13 +106,13 @@ def write_task_trace_and_rank_report(folder: str, trace_file: str, records: Iter
     technical_output_file_name = f"{folder}/{trace_file}-task-ranked.csv"
     whole_tasks = {}
     for record in records:
-        curr_id = record.get_id()
+        curr_id = record.id
         if curr_id in whole_tasks:
             present = whole_tasks[curr_id]
-            whole_tasks[curr_id].set_co2e(present.get_co2e() + record.get_co2e())
-            whole_tasks[curr_id].set_energy(present.get_energy() + record.get_energy())
-            whole_tasks[curr_id].set_avg_ci(f'{present.get_avg_ci()}|{record.get_avg_ci()}')
-            whole_tasks[curr_id].set_realtime(present.get_realtime() + record.get_realtime())
+            present.co2e += record.co2e
+            present.energy += record.energy
+            present.avg_ci = f'{present.avg_ci}|{record.avg_ci}'
+            present.realtime += record.realtime
         else:
             whole_tasks[curr_id] = record
     records = whole_tasks.values()
@@ -121,8 +121,8 @@ def write_task_trace_and_rank_report(folder: str, trace_file: str, records: Iter
     except Exception as e:
         logging.error("Error writing trace file for task rank report: %s", e)
         raise
-    sorted_records = sorted(records, key=lambda r: (-r.get_co2e(), -r.get_energy(), -r.get_realtime()))
-    sorted_records_par = sorted(records, key=lambda r: (-r.get_energy(), -r.get_realtime()))
+    sorted_records = sorted(records, key=lambda r: (-r.co2e, -r.energy, -r.realtime))
+    sorted_records_par = sorted(records, key=lambda r: (-r.energy, -r.realtime))
     try:
         with open(output_file_name, "w") as report_file:
             with open(technical_output_file_name, "w") as task_rank_file:

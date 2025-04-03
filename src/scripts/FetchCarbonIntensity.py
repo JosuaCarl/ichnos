@@ -5,25 +5,15 @@
 from src.models.IntensityInterval import IntensityInterval
 from src.Constants import *
 from src.utils.Usage import print_usage_exit_FetchCarbonIntensity as print_usage_exit
+from src.utils.TimeUtils import to_timestamp_from_dict, to_timestamp_from_str
 
 from datetime import datetime, date, timedelta
 import sys
 import re
 import requests
+import logging
 
 # Functions
-def to_timestamp_from_dict(time):
-    stamp = datetime.strptime(
-        f"{time[DAY]}/{time[MONTH]}/{time[YEAR]} {time[HOUR]}:{time[MINS]}", 
-        "%d/%m/%Y %H:%M")
-    return stamp.timestamp() * 1000
-
-
-def to_timestamp_from_str(time):
-    stamp = datetime.strptime(time, "%Y-%m-%dT%H:%MZ")
-    return stamp.timestamp() * 1000
-
-
 def within_bound(interval, start, end):
     interval_start = to_timestamp_from_str(interval["from"])
     interval_end = to_timestamp_from_str(interval["to"])
@@ -77,8 +67,8 @@ def fetch_carbon_intensity_national_grid(start, end):
 
 
 def fetch_carbon_intensity_electricity_maps(start, end):
-    print("[FetchCarbonIntensity] TBC this feature has not been implemented yet...")
-    pass
+    logging.error("[FetchCarbonIntensity] TBC this feature has not been implemented yet...")
+    exit(-1)
 
 
 def report_carbon_intensity_data(data, source, start, end):

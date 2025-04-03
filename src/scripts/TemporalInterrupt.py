@@ -14,13 +14,13 @@ linear_power_model = lambda min, max: linear_model((max - min), min)
 
 def calculate_carbon_footprint_for_task(task: CarbonRecord, min_watts, max_watts, memory_coefficient):
     # Time (h)
-    time = task.get_realtime() / 1000 / 3600  # convert from ms to h
+    time = task.realtime / 1000 / 3600  # convert from ms to h
     # Number of Cores (int)
-    no_cores = task.get_core_count()
+    no_cores = task.core_count
     # CPU Usage (%)
-    cpu_usage = task.get_cpu_usage() / (100.0 * no_cores)
+    cpu_usage = task.cpu_usage / (100.0 * no_cores)
     # Memory (GB)
-    memory = task.get_memory() / 1073741824  # bytes to GB
+    memory = task.memory / 1073741824  # bytes to GB
     # Core Energy Consumption (without PUE)
     core_consumption = time * linear_power_model(min_watts, max_watts)(cpu_usage) * 0.001  # convert from W to kW
     # Memory Power Consumption (without PUE)
@@ -50,9 +50,9 @@ def calculate_carbon_footprint(tasks_by_hour, ci, pue: float, min_watts, max_wat
                 energy_pue = energy * pue
                 memory_pue = memory * pue
                 task_footprint = (energy_pue + memory_pue) * ci_val
-                task.set_energy(energy_pue)
-                task.set_co2e(task_footprint)
-                task.set_avg_ci(ci_val)
+                task.energy = energy_pue
+                task.co2e = task_footprint
+                task.avg_ci = ci_val
                 total_energy += energy
                 total_energy_pue += energy_pue
                 total_memory_energy += memory

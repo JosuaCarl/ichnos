@@ -11,11 +11,12 @@ import logging
 from typing import Any, List, Dict, Tuple
 
 from src.models.TraceRecord import TraceRecord
+from src.models.CarbonRecord import CarbonRecord
 from src.utils.Parsers import parse_trace_file
-from src.Constants import FILE
+from src.Constants import FILE, DAY, MONTH, YEAR, HOUR, MINS
+from datetime import datetime
 
 # TODO: timezone conversion for non-utc times
-
 def to_timestamp(ms: float) -> time.datetime:
     """
     Convert a millisecond timestamp to a datetime object in UTC.
@@ -25,7 +26,26 @@ def to_timestamp(ms: float) -> time.datetime:
     """
     return time.datetime.fromtimestamp(float(ms) / 1000.0, tz=time.timezone.utc)
 
-def get_tasks_by_hour_with_overhead(start_hour: int, end_hour: int, tasks: List[Any]) -> Tuple[Dict[int, List[Any]], List[int]]:
+def to_timestamp_from_dict(ts_dict: dict) -> datetime:
+    """
+    Convert a dictionary with time components to a datetime object.
+    Expected keys: 'year', 'month', 'day'. 
+    Optional keys: 'hour', 'minute', 'second' (default to 0 if missing).
+    """
+    stamp = datetime.strptime(
+        f"{ts_dict[DAY]}/{ts_dict[MONTH]}/{ts_dict[YEAR]} {ts_dict[HOUR]}:{ts_dict[MINS]}", 
+        "%d/%m/%Y %H:%M")
+    return stamp.timestamp() * 1000
+
+def to_timestamp_from_str(ts_str: str) -> datetime:
+    """
+    Convert a string timestamp to a datetime object.
+    Tries ISO format (e.g. "YYYY-MM-DD" or "YYYY-MM-DDTHH:MM:SS").
+    """
+    stamp = datetime.strptime(ts_str, "%Y-%m-%dT%H:%MZ")
+    return stamp.timestamp() * 1000
+
+def get_tasks_by_hour_with_overhead(start_hour: int, end_hour: int, tasks: List[CarbonRecord]) -> Tuple[Dict[int, List[Any]], List[int]]:
     """
     Group tasks by hour with additional overhead calculations.
 
@@ -46,30 +66,30 @@ def get_tasks_by_hour_with_overhead(start_hour: int, end_hour: int, tasks: List[
         hour_overhead = 0
 
         for task in tasks:
-            start = int(task.get_start())
-            complete = int(task.get_complete())
+            start = int(task.start)
+            complete = int(task.complete)
             if start >= i and complete <= i + step:
                 data.append(task)
                 runtimes.append(complete - start)
             elif complete > i and complete < i + step and start < i:
                 partial_task = copy.deepcopy(task)
-                partial_task.set_start(i)
-                partial_task.set_realtime(complete - i)
+                partial_task.start = i
+                partial_task.realtime = complete - i
                 data.append(partial_task)
                 runtimes.append(complete - i)
             elif start > i and start < i + step and complete > i + step:
                 partial_task = copy.deepcopy(task)
-                partial_task.set_complete(i + step)
-                partial_task.set_realtime(i + step - start)
+                partial_task.complete = i + step
+                partial_task.realtime = i + step - start
                 data.append(partial_task)
                 if (i + step - start) > hour_overhead:
                     hour_overhead = i + step - start
                 runtimes.append(i + step - start)
             elif start < i and complete > i + step:
                 partial_task = copy.deepcopy(task)
-                partial_task.set_start(i)
-                partial_task.set_complete(i + step)
-                partial_task.set_realtime(step)
+                partial_task.start = i
+                partial_task.complete = i + step
+                partial_task.realtime = step
                 data.append(partial_task)
                 runtimes.append(step)
 
@@ -102,30 +122,30 @@ def get_tasks_by_interval_with_overhead(start_interval: int, end_interval: int, 
         hour_overhead = 0
 
         for task in tasks:
-            start = int(task.get_start())
-            complete = int(task.get_complete())
+            start = int(task.start)
+            complete = int(task.complete)
             if start >= i and complete <= i + step:
                 data.append(task)
                 runtimes.append(complete - start)
             elif complete > i and complete < i + step and start < i:
                 partial_task = copy.deepcopy(task)
-                partial_task.set_start(i)
-                partial_task.set_realtime(complete - i)
+                partial_task.start = i
+                partial_task.realtime = complete - i
                 data.append(partial_task)
                 runtimes.append(complete - i)
             elif start > i and start < i + step and complete > i + step:
                 partial_task = copy.deepcopy(task)
-                partial_task.set_complete(i + step)
-                partial_task.set_realtime(i + step - start)
+                partial_task.complete = i + step
+                partial_task.realtime = i + step - start
                 data.append(partial_task)
                 if (i + step - start) > hour_overhead:
                     hour_overhead = i + step - start
                 runtimes.append(i + step - start)
             elif start < i and complete > i + step:
                 partial_task = copy.deepcopy(task)
-                partial_task.set_start(i)
-                partial_task.set_complete(i + step)
-                partial_task.set_realtime(step)
+                partial_task.start = i
+                partial_task.complete = i + step
+                partial_task.realtime = step
                 data.append(partial_task)
                 runtimes.append(step)
 
@@ -178,8 +198,8 @@ def get_tasks_by_hour(tasks: List[Any]) -> Tuple[Dict[int, List[Any]], List[int]
     ends = []
     
     for task in tasks:
-        starts.append(int(task.get_start()))
-        ends.append(int(task.get_complete()))
+        starts.append(int(task.start))
+        ends.append(int(task.complete))
     
     earliest = min(starts)
     latest = max(ends)
@@ -200,8 +220,8 @@ def get_tasks_by_interval(tasks: List[Any], interval: int) -> Tuple[Dict[int, Li
     ends = []
     
     for task in tasks:
-        starts.append(int(task.get_start()))
-        ends.append(int(task.get_complete()))
+        starts.append(int(task.start))
+        ends.append(int(task.complete))
     
     earliest = min(starts)
     latest = max(ends)
