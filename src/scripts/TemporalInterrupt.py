@@ -1,3 +1,9 @@
+"""Module for calculating carbon footprints and exploring temporal shifting of workflows.
+
+This module provides functions to compute energy consumption from tasks, 
+apply temporal shifting based on carbon intensity, and generate corresponding reports.
+"""
+
 from src.models.TraceRecord import TraceRecord
 from src.models.CarbonRecord import CarbonRecord
 from src.WorkflowNameConstants import *
@@ -9,10 +15,23 @@ from src.utils.Usage import print_usage_exit_TemporalInterrupt
 
 import sys
 import numpy as np
+from typing import Dict, List, Tuple, Callable, Any
 
-linear_power_model = lambda min, max: linear_model((max - min), min)
+linear_power_model: Callable[[int, int], Callable[[float], float]] = lambda min_watts, max_watts: linear_model((max_watts - min_watts), min_watts)
 
-def calculate_carbon_footprint_for_task(task: CarbonRecord, min_watts, max_watts, memory_coefficient):
+def calculate_carbon_footprint_for_task(task: CarbonRecord, min_watts: int, max_watts: int, memory_coefficient: float) -> Tuple[float, float]:
+    """
+    Calculate the core and memory energy consumption for a given task.
+
+    Parameters:
+        task (CarbonRecord): The task record.
+        min_watts (int): Minimum power in watts.
+        max_watts (int): Maximum power in watts.
+        memory_coefficient (float): Coefficient for memory consumption.
+
+    Returns:
+        Tuple[float, float]: core_consumption and memory_consumption in kW.
+    """
     # Time (h)
     time = task.realtime / 1000 / 3600  # convert from ms to h
     # Number of Cores (int)
@@ -28,7 +47,21 @@ def calculate_carbon_footprint_for_task(task: CarbonRecord, min_watts, max_watts
     # Overall and Memory Consumption (kW) (without PUE)
     return (core_consumption, memory_consumption)
 
-def calculate_carbon_footprint(tasks_by_hour, ci, pue: float, min_watts, max_watts, memory_coefficient):
+def calculate_carbon_footprint(tasks_by_hour: Dict[str, List[CarbonRecord]], ci: Dict[str, float], pue: float, min_watts: int, max_watts: int, memory_coefficient: float) -> Tuple[float, float, float, float, float]:
+    """
+    Calculate the overall carbon footprint for tasks grouped by hour.
+
+    Parameters:
+        tasks_by_hour (Dict[str, List[CarbonRecord]]): Tasks grouped by hour.
+        ci (Dict[str, float]): Carbon intensity values by timestamp key.
+        pue (float): Power usage effectiveness multiplier.
+        min_watts (int): Minimum power in watts.
+        max_watts (int): Maximum power in watts.
+        memory_coefficient (float): Coefficient for memory consumption.
+
+    Returns:
+        Tuple[float, float, float, float, float]: Total energy, energy with PUE, memory energy, memory energy with PUE, and total carbon emissions.
+    """
     total_energy = 0.0
     total_energy_pue = 0.0
     total_memory_energy = 0.0
@@ -61,7 +94,23 @@ def calculate_carbon_footprint(tasks_by_hour, ci, pue: float, min_watts, max_wat
 
     return (total_energy, total_energy_pue, total_memory_energy, total_memory_energy_pue, total_carbon_emissions)
 
-def explore_temporal_shifting_for_workflow(workflow, tasks_by_hour, ci, min_watts, max_watts, overhead_hours, pue, memory_coefficient):
+def explore_temporal_shifting_for_workflow(workflow: Any, tasks_by_hour: Dict[str, List[CarbonRecord]], ci: Dict[str, float], min_watts: int, max_watts: int, overhead_hours: Dict[int, float], pue: float, memory_coefficient: float) -> str:
+    """
+    Explore shifting of workflow execution times based on minimum carbon intensity.
+
+    Parameters:
+        workflow (Any): The workflow identifier.
+        tasks_by_hour (Dict[str, List[CarbonRecord]]): Tasks grouped by hour.
+        ci (Dict[str, float]): Carbon intensity values keyed by time.
+        min_watts (int): Minimum power in watts.
+        max_watts (int): Maximum power in watts.
+        overhead_hours (Dict[int, float]): Overhead hours for shifting.
+        pue (float): Power usage effectiveness multiplier.
+        memory_coefficient (float): Coefficient for memory consumption.
+
+    Returns:
+        str: A comma-separated string output with original and shifted carbon footprint details.
+    """
     # Identify Hours in Order
     hours_by_key = {}
 
@@ -120,7 +169,21 @@ def explore_temporal_shifting_for_workflow(workflow, tasks_by_hour, ci, min_watt
     return ','.join(output)
 
 
-def main(workflows, ci, min_watts, max_watts, pue, memory_coefficient):
+def main(workflows: List[Any], ci: Dict[str, float], min_watts: int, max_watts: int, pue: float, memory_coefficient: float) -> None:
+    """
+    Main function to process workflows and write the temporal shifting report.
+
+    Parameters:
+        workflows (List[Any]): List of workflow identifiers.
+        ci (Dict[str, float]): Carbon intensity values.
+        min_watts (int): Minimum power in watts.
+        max_watts (int): Maximum power in watts.
+        pue (float): Power usage effectiveness multiplier.
+        memory_coefficient (float): Coefficient for memory consumption.
+
+    Returns:
+        None
+    """
     results = []
 
     for workflow in workflows:
