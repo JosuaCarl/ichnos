@@ -1,7 +1,24 @@
+"""
+Module: TraceRecord
+This module defines the TraceRecord class for parsing raw trace data and 
+creating corresponding CarbonRecord instances.
+"""
+
 from src.models.CarbonRecord import CarbonRecord
 
 class TraceRecord:
+    """
+    A class to parse raw task trace data into a structured format and 
+    convert it into a CarbonRecord instance.
+    """
     def __init__(self, fields: str, data: str, delimiter: str) -> None:
+        """
+        Initialize a TraceRecord.
+        
+        :param fields: A delimited string of field names.
+        :param data: A delimited string of data corresponding to the fields.
+        :param delimiter: The delimiter to split fields and data.
+        """
         self._raw = self.get_raw_data_map(fields, data, delimiter)
         self._id = self._raw['task_id']
         self._realtime = self._raw['realtime']
@@ -19,6 +36,14 @@ class TraceRecord:
         self._submit = self._raw['submit']
 
     def get_raw_data_map(self, fields: str, data: str, delimiter: str) -> dict:
+        """
+        Convert the raw data strings into a dictionary mapping field names to values.
+        
+        :param fields: Delimited string of field names.
+        :param data: Delimited string of field values.
+        :param delimiter: Delimiter used in the strings.
+        :return: Dictionary of raw data.
+        """
         raw = {}
         for field, value in zip(fields.split(delimiter), data.split(delimiter)):
             value = value.strip()
@@ -39,6 +64,11 @@ class TraceRecord:
         return raw 
 
     def make_carbon_record(self) -> CarbonRecord:
+        """
+        Create a CarbonRecord from the parsed trace data.
+        
+        :return: A CarbonRecord instance.
+        """
         return CarbonRecord(
             energy=None, 
             co2e=None, 
@@ -115,4 +145,7 @@ class TraceRecord:
         return self._start
 
     def __str__(self) -> str:
+        """
+        Return the string representation of this TraceRecord.
+        """
         return f"[TraceRecord: {str(self._raw)}]"

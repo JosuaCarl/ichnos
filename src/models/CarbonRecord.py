@@ -1,3 +1,9 @@
+"""
+Module: CarbonRecord
+This module defines the CarbonRecord dataclass which encapsulates energy consumption,
+carbon emissions, and performance metrics for a given computational task.
+"""
+
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
@@ -5,6 +11,25 @@ HEADERS = "name,id,co2e,energy,avg_ci,realtime,cpu_model,cpu_count,cpu_powerdraw
 
 @dataclass(unsafe_hash=True)
 class CarbonRecord:
+    """
+    Dataclass representing a record of carbon footprint and energy consumption.
+    
+    Attributes:
+        energy (Optional[float]): Energy consumption.
+        co2e (Optional[float]): Carbon emissions.
+        id (Any): Identifier for the record.
+        realtime (float): Real time duration.
+        start (Optional[Any]): Start time of the task.
+        complete (Optional[Any]): Completion time of the task.
+        core_count (int): Number of CPU cores used.
+        cpu_powerdraw (Optional[float]): CPU power draw metric.
+        cpu_usage (float): CPU usage percentage.
+        cpu_model (str): CPU model information.
+        memory (Optional[float]): Memory consumption.
+        name (str): Task name.
+        avg_ci (Optional[float]): Average carbon intensity.
+        memory_powerdraw (Optional[float]): Memory power draw metric.
+    """
     energy: Optional[float]
     co2e: Optional[float]
     id: Any
@@ -21,5 +46,8 @@ class CarbonRecord:
     memory_powerdraw: Optional[float] = field(default=None, repr=False)
     
     def __str__(self) -> str:
+        """
+        Return the CSV-like string representation of the CarbonRecord.
+        """
         return f"{self.name},{self.id},{self.co2e},{self.energy},{self.avg_ci},{self.realtime},"\
                f"{self.cpu_model},{self.core_count},{self.cpu_powerdraw},{self.cpu_usage},{self.memory},{self.memory_powerdraw}"
