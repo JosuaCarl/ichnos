@@ -4,8 +4,8 @@ A project with scripts to methodically calculate the Carbon Footprint of Workflo
 # Usage
 For the current version, replicating the previous calculation approach noted in the Credits section, example usage has been provided with default values:
 ```
-$ python -m src.scripts.CarbonFootprint <trace-name> <ci-value|ci-file-name> <min-watts> <max-watts> <? pue=1.0> <? memory-coeff=0.392>
-$ python -m src.scripts.CarbonFootprint test 475 60 120 1.67 12 0.3725
+$ python -m src.scripts.IchnosCF <trace-name> <ci-value|ci-file-name> <power_model> <? interval=60> <? pue=1.0> <? memory-coeff=0.392>
+$ python3 -m src.scripts.IchnosCF ampliseq-1 uk-marg-010125-110225 gpg_15_powersave_linear 5 1.0 0.392
 ```      
 
 > **Note**  
@@ -24,54 +24,6 @@ See example output:
 ```
 westkath@misool:~/code/carbon-footprint$ python3 -m src.scripts.Convertor nf-rangeland-21-1.txt - 6 0 \;
 westkath@misool:~/code/carbon-footprint$ python3 -m src.scripts.Convertor nf-rangeland-21-1.txt + 6 0 \;
-
-westkath@misool:~/code/carbon-footprint$ python3 -m src.scripts.CarbonFootprint nf-rangeland-21-1-06-00 ci-uk-jan-day 1.
-67 12 0.3725 txt-semi
-Carbon Footprint Trace:
-- carbon-intensity: ci-uk-jan-day
-- power-usage-effectiveness: 1.67
-- core-power-draw: 12
-- memory-power-draw: 0.3725
-- config-profile: txt-semi
-
-Overall:
-- Energy Consumption (exc. PUE): 4.56550088700375kWh
-- Energy Consumption (inc. PUE): 7.624386481296285kWh
-- Memory Energy Consumption (exc. PUE): 4.100691780370434kWh
-- Memory Energy Consumption (inc. PUE): 6.848155273218615kWh
-- Carbon Emissions: 1874.4267412331753gCO2e
-
-westkath@misool:~/code/carbon-footprint$ python3 -m src.scripts.CarbonFootprint nf-rangeland-21-1 ci-uk-jan-day 1.67 12
-0.3725 txt-semi
-Carbon Footprint Trace:
-- carbon-intensity: ci-uk-jan-day
-- power-usage-effectiveness: 1.67
-- core-power-draw: 12
-- memory-power-draw: 0.3725
-- config-profile: txt-semi
-
-Overall:
-- Energy Consumption (exc. PUE): 4.56550088700375kWh
-- Energy Consumption (inc. PUE): 7.624386481296285kWh
-- Memory Energy Consumption (exc. PUE): 4.100691780370434kWh
-- Memory Energy Consumption (inc. PUE): 6.848155273218615kWh
-- Carbon Emissions: 2231.5090490465727gCO2e
-
-westkath@misool:~/code/carbon-footprint$ python3 -m src.scripts.CarbonFootprint nf-rangeland-21-1+06-00 ci-uk-jan-day 1.
-67 12 0.3725 txt-semi
-Carbon Footprint Trace:
-- carbon-intensity: ci-uk-jan-day
-- power-usage-effectiveness: 1.67
-- core-power-draw: 12
-- memory-power-draw: 0.3725
-- config-profile: txt-semi
-
-Overall:
-- Energy Consumption (exc. PUE): 4.56550088700375kWh
-- Energy Consumption (inc. PUE): 7.624386481296285kWh
-- Memory Energy Consumption (exc. PUE): 4.100691780370434kWh
-- Memory Energy Consumption (inc. PUE): 6.848155273218615kWh
-- Carbon Emissions: 1823.514361925256gCO2e
 ```
 
 ## 📖 Publications
