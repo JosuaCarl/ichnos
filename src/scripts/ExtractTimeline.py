@@ -1,5 +1,7 @@
 from src.models.TraceRecord import TraceRecord
 from src.models.CarbonRecord import CarbonRecord, HEADERS
+from src.utils.Usage import print_usage_exit_ExtractTimeline as print_usage_exit
+
 import sys
 import configparser
 import datetime as time
@@ -30,26 +32,18 @@ def parse_trace_file(filepath):
     return records
 
 
-def print_usage_exit():
-    usage = "carbon-footprint $ python -m src.scripts.ExtractTimeline <trace-file-name>"
-    example = "carbon-footprint $ python -m src.scripts.ExtractTimeline test"
 
-    print(usage)
-    print(example)
-    exit(-1)
-
-
-def get_timeline_data(record):
+def get_timeline_data(record: TraceRecord):
     data = {}
 
-    data["process"] = record.get_process()
-    data["realtime"] = record.get_realtime()
-    data["start"] = record.get_start()
-    data["complete"] = record.get_complete()
-    data["cpu_count"] = record.get_cpu_count()
-    data["cpu_usage"] = record.parse_cpu_percentage()
-    data["cpu_model"] = record.get_cpu_model()
-    data["memory"] = record.parse_memory()
+    data["process"] = record.process
+    data["realtime"] = record.realtime
+    data["start"] = record.start
+    data["complete"] = record.complete
+    data["cpu_count"] = record.cpu_count
+    data["cpu_usage"] = record.cpu_percentage
+    data["cpu_model"] = record.cpu_model
+    data["memory"] = record.memory
     
     return data
 

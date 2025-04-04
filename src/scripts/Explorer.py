@@ -1,9 +1,10 @@
 # Imports
-import sys
-import os
 from src.scripts.Convertor import convertor
 from src.scripts.CarbonFootprint import get_carbon_footprint
+from src.utils.Usage import print_usage_exit_Explorer as print_usage_exit
 
+import sys
+import os
 
 # Constants
 SHIFT_BY_12 = "00-12-00"
@@ -69,14 +70,6 @@ def get_output_folder(trace, ci):
     ci_name = ci.split(".")[-2]
 
     return f"output/explorer-{trace_name}-{ci_name}"
-
-
-def print_usage_exit():
-    usage = "[Explorer] Expected Usage: py explorer.py <trace-file> <ci-file> <config> <shift> <min-watts> <max-watts>"
-    example = "[Explorer] Example Use: py explorer.py test.csv ci-20240218.csv default 12 30 80"
-    print(usage)
-    print(example)
-    exit(-1)
 
 
 def parse_arguments(arguments):

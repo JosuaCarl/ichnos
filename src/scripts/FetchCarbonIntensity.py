@@ -3,42 +3,17 @@
 
 # Imports
 from src.models.IntensityInterval import IntensityInterval
+from src.Constants import *
+from src.utils.Usage import print_usage_exit_FetchCarbonIntensity as print_usage_exit
+from src.utils.TimeUtils import to_timestamp_from_dict, to_timestamp_from_str
+
 from datetime import datetime, date, timedelta
 import sys
 import re
 import requests
-
-
-# Constants
-NG_BASE_URL = "https://api.carbonintensity.org.uk/"
-NG_ENDPOINT_INTENSITY = "intensity"
-NG_ENDPOINT_INTENSITY_DATE = NG_ENDPOINT_INTENSITY + "/date"
-HEADERS = {"Accept": "application/json"}
-ELECTRICITY_MAPS = "electricity-maps"
-NATIONAL_GRID = "national-grid"
-SOURCE = "source"
-START = "start"
-END = "end"
-YEAR = "year"
-MONTH = "month"
-DAY = "day"
-HOUR = "hour"
-MINS = "mins"
-
+import logging
 
 # Functions
-def to_timestamp_from_dict(time):
-    stamp = datetime.strptime(
-        f"{time[DAY]}/{time[MONTH]}/{time[YEAR]} {time[HOUR]}:{time[MINS]}", 
-        "%d/%m/%Y %H:%M")
-    return stamp.timestamp() * 1000
-
-
-def to_timestamp_from_str(time):
-    stamp = datetime.strptime(time, "%Y-%m-%dT%H:%MZ")
-    return stamp.timestamp() * 1000
-
-
 def within_bound(interval, start, end):
     interval_start = to_timestamp_from_str(interval["from"])
     interval_end = to_timestamp_from_str(interval["to"])
@@ -92,8 +67,8 @@ def fetch_carbon_intensity_national_grid(start, end):
 
 
 def fetch_carbon_intensity_electricity_maps(start, end):
-    print("[FetchCarbonIntensity] TBC this feature has not been implemented yet...")
-    pass
+    logging.error("[FetchCarbonIntensity] TBC this feature has not been implemented yet...")
+    exit(-1)
 
 
 def report_carbon_intensity_data(data, source, start, end):
@@ -107,14 +82,6 @@ def report_carbon_intensity_data(data, source, start, end):
             file.write(f"{interval}\n")
 
     print(f"[FetchCarbonIntensity] Reported Carbon Intensity Data for Requested Interval [{out_file_name}]")
-
-
-def print_usage_exit():
-    print("[FetchCarbonIntensity] Usage: py FetchCarbonIntensity.py <source> <YYYY-MM-DD:HH-MM> <YYYY-MM-DD:HH-MM>")
-    print(f"[FetchCarbonIntensity] $ py FetchCarbonIntensity.py {ELECTRICITY_MAPS} 2024-03-01:09-00 2024-03-03:17-00")
-    print(f"[FetchCarbonIntensity] $ py FetchCarbonIntensity.py {NATIONAL_GRID} 2024-03-01:09-00 2024-03-01:17-00")
-    exit(-1)
-
 
 def validate_arguments(args):
     if len(args) != 3:
