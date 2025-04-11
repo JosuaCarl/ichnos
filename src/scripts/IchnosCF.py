@@ -53,7 +53,7 @@ def main(arguments: Dict[str, Any]) -> Tuple[str, float]:
     cf, records_res = calculate_carbon_footprint_ccf(tasks_by_interval, ci, pue, model_name, memory_coefficient, check_reserved_memory_flag)
     cpu_energy, cpu_energy_pue, mem_energy, mem_energy_pue, op_carbon_emissions, node_memory_usage = cf
 
-    emb_carbon_emissions = embodied_carbon_for_carbon_records(records_res, use_cpu_usage=True)
+    emb_carbon_emissions = embodied_carbon_for_carbon_records(records_res, use_cpu_usage=False)
     total_carbon_emissions = op_carbon_emissions + emb_carbon_emissions
 
     summary += "\nCloud Carbon Footprint Method:\n"
@@ -68,7 +68,6 @@ def main(arguments: Dict[str, Any]) -> Tuple[str, float]:
     print(f"Operational Carbon Emissions: {op_carbon_emissions}gCO2e")
     print(f"Embodied Carbon Emissions: {emb_carbon_emissions}gCO2e")
     print(f"Total Carbon Emissions: {total_carbon_emissions}gCO2e")
-    
 
     if check_reserved_memory_flag:
         total_res_mem_energy: float = 0.0
