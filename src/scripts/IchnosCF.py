@@ -106,10 +106,10 @@ def main(arguments: Dict[str, Any]) -> Tuple[str, float]:
     write_summary_file("output", workflow + "-" + ci + "-" + model_name, summary)
     write_task_trace_and_rank_report("output", workflow + "-" + ci + "-" + model_name, records_res)
 
-    return (summary, total_carbon_emissions)
+    return (summary, (op_carbon_emissions, emb_carbon_emissions))
 
 
-def get_carbon_footprint(command: str) -> Tuple[str, float]:
+def get_carbon_footprint(command: str) -> Tuple[str, Tuple[float, float]]:
     """
     Parse the command and compute the carbon footprint.
     
