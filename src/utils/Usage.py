@@ -57,8 +57,8 @@ def print_usage_exit_Explorer() -> None:
     """
     Print usage information for the Explorer script and exit.
     """
-    usage = "[Explorer] Expected Usage: py explorer.py <trace-file> <ci-file> <config> <shift> <min-watts> <max-watts>"
-    example = "[Explorer] Example Use: py explorer.py test.csv ci-20240218.csv default 12 30 80"
+    usage = "[Explorer] Expected Usage: py explorer.py <trace-file> <ci-file> <shift> <model-name> <interval> <pue> <memory-coefficient>"
+    example = "[Explorer] Example Use: py explorer.py test ci-20240218 6 gpg_14_performance 60 1.0 0.392"
     logging.error(usage)
     logging.error(example)
     exit(-1)
