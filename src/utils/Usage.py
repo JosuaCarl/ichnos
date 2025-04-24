@@ -11,8 +11,8 @@ def print_usage_exit_TemporalInterrupt() -> None:
     """
     Print usage information for the TemporalInterrupt script and exit.
     """
-    usage = "$ python -m src.scripts.TemporalInterrupt <ci-file-name> <pue> <memory_coefficient> <min-watts> <max-watts>"
-    example = "$ python -m src.scripts.TemporalInterrupt ci 1.0 0.392 65 219"
+    usage = "$ python -m src.scripts.TemporalInterrupt <ci-file-name> <power_model> <? interval=60> <? pue=1.0> <? memory-coeff=0.392>"
+    example = "$ python -m src.scripts.TemporalInterrupt ci gpg_14_performance_minmax 60 1.0 0.392"
     logging.error(usage)
     logging.error(example)
     exit(-1)

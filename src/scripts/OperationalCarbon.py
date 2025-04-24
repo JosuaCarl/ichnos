@@ -118,7 +118,7 @@ if __name__ == "__main__":
     if memory_coefficient is None:
         memory_coefficient = DEFAULT_MEMORY_POWER_DRAW
 
-    tasks_by_interval, _ = extract_tasks_by_interval(workflow, interval)
+    ((tasks_by_interval, _), _) = extract_tasks_by_interval(workflow, interval)
     
     for curr_interval, records_list in tasks_by_interval.items():
         print(f'interval: {to_timestamp(curr_interval)}')
