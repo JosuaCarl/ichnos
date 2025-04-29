@@ -1,14 +1,14 @@
 from typing import Any, Callable, Dict, List, Tuple, Union
 from src.models.CarbonRecord import CarbonRecord
 from src.utils.TimeUtils import to_timestamp, extract_tasks_by_interval
-from src.utils.PowerModel import get_power_model
+from src.utils.PowerModel import get_power_model, get_memory_draw, get_system_cores
 from src.utils.Parsers import parse_arguments, parse_ci_intervals
 from src.Constants import *
 
 import sys
 
 # Estimate Energy Consumption
-def estimate_task_energy_consumption_ccf(task: CarbonRecord, model: Callable[[float], float], model_name: str, memory_coefficient: float) -> Tuple[float, float]:
+def estimate_task_energy_consumption_ccf(task: CarbonRecord, model: Callable[[float], float], model_name: str, memory_coefficient: float, system_cores: int) -> Tuple[float, float]:
     """
     Estimate the energy consumptions for a task.
     
@@ -16,22 +16,23 @@ def estimate_task_energy_consumption_ccf(task: CarbonRecord, model: Callable[[fl
     :param model: Power model function.
     :param model_name: Name of the power model.
     :param memory_coefficient: Coefficient for memory power draw.
+    :param system_cores: no. of cores on the system utilised. 
     :return: Tuple (core energy consumption, memory energy consumption) in kWh.
     """
-    # TODO: Revise this default value (this is for GPG Node 13 OnDemand)
-    default_system_cores: int = 32
+    if not system_cores:
+        system_cores = 32
 
     # Time (h)
     time_h: float = task.realtime / 1000 / 3600  # convert from ms to hours
     # Number of Cores (int)
     no_cores: int = task.core_count
     # CPU Usage (%)
-    cpu_usage: float = task.cpu_usage / default_system_cores  # nextflow reports as overall utilisation
+    cpu_usage: float = task.cpu_usage / system_cores  # nextflow reports as overall utilisation
     # Memory (GB)
     memory: float = task.memory / 1073741824  # memory reported in bytes  https://www.nextflow.io/docs/latest/metrics.html 
     # Core Energy Consumption (without PUE)
     core_consumption: float = time_h * model(cpu_usage) * 0.001  # convert from W to kW
-    if model_name == 'baseline':
+    if 'baseline' in model_name:
         core_consumption *= no_cores
     # Memory Power Consumption (without PUE)
     memory_consumption: float = memory * memory_coefficient * time_h * 0.001  # convert from W to kW
@@ -39,7 +40,7 @@ def estimate_task_energy_consumption_ccf(task: CarbonRecord, model: Callable[[fl
     return (core_consumption, memory_consumption)
 
 
-# Estimate Carbon Footprint using CCF Methodology
+# Estimate Carbon Footprint 
 def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[Any, List[CarbonRecord]], ci: Union[float, Dict[str, float]], pue: float, model_name: str, memory_coefficient: float, check_node_memory: bool = False) -> Tuple[Tuple[float, float, float, float, float, List[Any]], List[CarbonRecord]]:
     """
     Calculate the carbon footprint using the CCF methodology.
@@ -60,6 +61,8 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[Any, List[Car
     records: List[CarbonRecord] = []
     node_memory_used: List[Any] = []
     power_model = get_power_model(model_name)
+    system_cores = get_system_cores(model_name)
+    memory_coefficient = get_memory_draw(model_name)
 
     for group_interval, tasks in tasks_grouped_by_interval.items():
         if tasks:
@@ -84,7 +87,7 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[Any, List[Car
                 node_memory_used.append((realtime, ci_val))
 
             for task in tasks:
-                energy, memory = estimate_task_energy_consumption_ccf(task, power_model, model_name, memory_coefficient)
+                energy, memory = estimate_task_energy_consumption_ccf(task, power_model, model_name, memory_coefficient, system_cores)
                 energy_pue: float = energy * pue
                 memory_pue: float = memory * pue
                 task_footprint: float = (energy_pue + memory_pue) * ci_val
