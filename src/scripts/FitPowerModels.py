@@ -78,21 +78,27 @@ def make_model(filename):
     linear_v2 = np.poly1d(linear_v2_coef)
     model_linear_v2 = Polynomial(linear_v2)
 
-    return (model_linear_v2, mem_draw)
+    return (model_linear_v2, mem_draw, (min(y_arr), max(y_arr)))
 
-def write_output(filename, model, mem_draw):
+def write_output(filename, model, mem_draw, minmax, mem):
     filename = f'output/{filename}-model.txt'
+    (miiin, maaax) = minmax
 
     with open(filename, 'w') as f:
         model_str = str(model)
         f.write(filename + '\n')
-        f.write(model_str)
+        f.write(model_str + '\n')
+        f.write(f'Memory Draw: {mem_draw / mem}\n')
+        f.write(f'Idle: {miiin}\n')
+        f.write(f'Max: {maaax}\n')
 
     print(f'Models: stored in file {filename}')
 
 
+# call with ts filename prefix and memory on the node requested, e.g. for gpg13, this is gpg13-performance and 64GB of RAM
 if __name__ == '__main__':
     args = sys.argv[1:]
     filename = args[0].strip()
-    (model, mem_draw) = make_model(filename)
-    write_output(filename, model, mem_draw)
+    total_mem = int(args[1].strip())
+    (model, mem_draw, minmax) = make_model(filename)
+    write_output(filename, model, mem_draw, minmax, total_mem)
