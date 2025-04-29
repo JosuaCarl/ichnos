@@ -51,3 +51,13 @@ def baseline_linear_power_model(tdp_per_core: float) -> Callable[[float], float]
     :return: A linear model function scaled by the TDP.
     """
     return linear_model(tdp_per_core / 100, 0)
+
+def fitted_linear_power_model(coefficient, intercept) -> Callable[[float], float]:
+    """
+    Calculate the fitted linear power model using the configured values.
+
+    :param coefficient: the estimated coefficient.
+    :param intercept: the estimated intercept.
+    :return the fitted linear function reflecting the power range.
+    """
+    return linear_model(coefficient, intercept)
