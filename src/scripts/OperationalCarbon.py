@@ -107,16 +107,13 @@ if __name__ == "__main__":
     # Parse Arguments
     args: List[str] = sys.argv[1:]
     arguments: Dict[str, Any] = parse_arguments(args)
-    
-    # TODO: Revise this default value (this is for GPG Node 13 OnDemand)
-    default_node_mem_draw: float = 0.40268229166666664
 
     # Data
     workflow: str = arguments[TRACE]
     pue: float = arguments[PUE]
     interval: int = arguments[INTERVAL]
     model_name: str = arguments[MODEL_NAME]
-    memory_coefficient: float = default_node_mem_draw
+    memory_coefficient: float = arguments[MEMORY_COEFFICIENT]
 
     if memory_coefficient is None:
         memory_coefficient = DEFAULT_MEMORY_POWER_DRAW

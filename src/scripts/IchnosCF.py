@@ -51,8 +51,8 @@ def main(arguments: Dict[str, Any]) -> Tuple[str, float]:
     cf, records_res = calculate_carbon_footprint_ccf(tasks_by_interval, ci, pue, model_name, memory_coefficient, check_reserved_memory_flag)
     cpu_energy, cpu_energy_pue, mem_energy, mem_energy_pue, op_carbon_emissions, node_memory_usage = cf
 
-    emb_carbon_emissions = embodied_carbon_for_carbon_records(records_res, use_cpu_usage=False)
-    total_carbon_emissions = op_carbon_emissions + emb_carbon_emissions
+    #emb_carbon_emissions = embodied_carbon_for_carbon_records(records_res, use_cpu_usage=False)
+    #total_carbon_emissions = op_carbon_emissions + emb_carbon_emissions
 
     summary += "\nCloud Carbon Footprint Method:\n"
     summary += f"- Energy Consumption (exc. PUE): {cpu_energy}kWh\n"
@@ -60,12 +60,12 @@ def main(arguments: Dict[str, Any]) -> Tuple[str, float]:
     summary += f"- Memory Energy Consumption (exc. PUE): {mem_energy}kWh\n"
     summary += f"- Memory Energy Consumption (inc. PUE): {mem_energy_pue}kWh\n"
     summary += f"- Operational Carbon Emissions: {op_carbon_emissions}gCO2e\n"
-    summary += f"- Embodied Carbon Emissions: {emb_carbon_emissions}gCO2e\n"
-    summary += f"- Total Carbon Emissions: {total_carbon_emissions}gCO2e\n"
+    summary += f"- Embodied Carbon Emissions: NA\n"
+    summary += f"- Total Carbon Emissions: NA\n"
 
     print(f"Operational Carbon Emissions: {op_carbon_emissions}gCO2e")
-    print(f"Embodied Carbon Emissions: {emb_carbon_emissions}gCO2e")
-    print(f"Total Carbon Emissions: {total_carbon_emissions}gCO2e")
+    print(f"Embodied Carbon Emissions: NAgCO2e")
+    print(f"Total Carbon Emissions: NAgCO2e")
 
     if check_reserved_memory_flag:
         total_res_mem_energy: float = 0.0
@@ -104,7 +104,7 @@ def main(arguments: Dict[str, Any]) -> Tuple[str, float]:
     write_summary_file("output", workflow + "-" + ci + "-" + model_name, summary)
     write_task_trace_and_rank_report("output", workflow + "-" + ci + "-" + model_name, records_res)
 
-    return (summary, (op_carbon_emissions, emb_carbon_emissions))
+    return (summary, (op_carbon_emissions, None))
 
 
 def get_carbon_footprint(command: str) -> Tuple[str, Tuple[float, float]]:

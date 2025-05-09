@@ -1,7 +1,7 @@
 from typing import Any
 import json
 import src.utils.MathModels as MathModels
-from Constants import DEFAULT_MEMORY_POWER_DRAW
+from src.Constants import DEFAULT_MEMORY_POWER_DRAW
 
 
 def get_power_model(model_name: str) -> Any:
