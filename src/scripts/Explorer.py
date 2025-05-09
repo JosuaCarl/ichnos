@@ -71,11 +71,11 @@ def report_summary(folder, settings, results):
     print(f"[Explorer] Finished - View Results in [{folder}/summary.txt]")
 
 
-def get_output_folder(trace, ci): 
+def get_output_folder(shift, trace, ci): 
     trace_name = trace
     ci_name = ci
 
-    return f"output/explorer-{trace_name}-{ci_name}"
+    return f"output/explorer-{shift}h-{trace_name}-{ci_name}"
 
 
 def parse_arguments(arguments):
@@ -155,8 +155,9 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     settings = parse_arguments(args)
 
-    output_folder = get_output_folder(settings[TRACE], settings[CI])
+    output_folder = get_output_folder(settings[SHIFT], settings[TRACE], settings[CI])
     os.makedirs(output_folder, exist_ok=True)
 
     footprints = shift_trace_forwards_by_h(settings[TRACE], ",", settings[SHIFT], settings[CI], settings[MODEL_NAME], settings[INTERVAL], settings[PUE], settings[MEMORY_COEFFICIENT])
     report_summary(output_folder, settings, footprints)
+    
