@@ -124,6 +124,32 @@ def shift_trace_both_directions_by_h(trace, delim, shift_by, ci, model_name, int
     return footprints
 
 
+def shift_trace_forwards_by_h(trace, delim, shift_by, ci, model_name, interval, pue, memory_coeff):
+    forward_traces = []
+
+    for i in range(1, shift_by + 1):
+        shift = ''
+
+        if i >= 24:
+            days = i // 24
+            hours = i - (24 * days)
+            shift = f"{str(days).zfill(2)}-{str(hours).zfill(2)}-00"
+        else:
+            shift = f"00-{str(i).zfill(2)}-00"
+
+        (_, _, trace_fwd) = shift_trace(trace, delim, shift)
+        forward_traces.append(trace_fwd)
+
+    footprints = []
+
+    footprints.append((trace, calculate_footprint(trace, ci, model_name, interval, pue, memory_coeff)))
+
+    for trace_fwd in forward_traces:
+        footprints.append((trace_fwd, calculate_footprint(trace_fwd, ci, model_name, interval, pue, memory_coeff)))
+
+    return footprints
+
+
 # Shift over 2x hour period
 if __name__ == "__main__":
     args = sys.argv[1:]
@@ -132,5 +158,5 @@ if __name__ == "__main__":
     output_folder = get_output_folder(settings[TRACE], settings[CI])
     os.makedirs(output_folder, exist_ok=True)
 
-    footprints = shift_trace_both_directions_by_h(settings[TRACE], ",", settings[SHIFT], settings[CI], settings[MODEL_NAME], settings[INTERVAL], settings[PUE], settings[MEMORY_COEFFICIENT])
+    footprints = shift_trace_forwards_by_h(settings[TRACE], ",", settings[SHIFT], settings[CI], settings[MODEL_NAME], settings[INTERVAL], settings[PUE], settings[MEMORY_COEFFICIENT])
     report_summary(output_folder, settings, footprints)
