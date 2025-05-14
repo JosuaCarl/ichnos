@@ -30,10 +30,10 @@ def main(arguments: Dict[str, Any]) -> Tuple[str, float]:
 
     tasks_by_interval, _ = extract_tasks_by_interval(workflow, interval)
 
-    for curr_interval, records_list in tasks_by_interval.items():
-        print(f'interval: {to_timestamp(curr_interval)}')
-        if records_list:
-            print(f'tasks: {", ".join([record.id for record in records_list])}')
+    # for curr_interval, records_list in tasks_by_interval.items():
+    #     print(f'interval: {to_timestamp(curr_interval)}')
+    #     if records_list:
+    #         print(f'tasks: {", ".join([record.id for record in records_list])}')
 
     summary: str = ""
     summary += "Carbon Footprint Trace:\n"
