@@ -9,6 +9,7 @@ import logging
 from typing import Tuple, List, Dict, Union
 from src.Constants import *
 from src.models.TraceRecord import TraceRecord
+from src.utils.Usage import print_usage_exit_TemporalInterrupt
 
 """
 This parses arguments for the CarbonFootprint script (getting deprecated).
@@ -107,6 +108,43 @@ def parse_arguments(args: List[str]) -> Dict[str, Union[float, int, str]]:
         arguments[NUM_OF_NODES] = int(args[7])
     else:
         arguments[INTERVAL] = 60
+        arguments[PUE] = DEFAULT_PUE_VALUE
+        arguments[MEMORY_COEFFICIENT] = DEFAULT_MEMORY_POWER_DRAW
+
+    return arguments
+
+
+"""
+This parses arguments for the TemporalInterrupt script.
+"""
+def parse_arguments_TemporalInterrupt(args: List[str]) -> Dict[str, Union[float, int, str]]:
+    """
+    Parse command-line arguments for the TemporalInterrupt script.
+
+    Expected arguments:
+      - [0]: carbon intensity value or file name
+      - [1]: power model name
+      Optionally:
+      - [2]: interval (int)
+      - Given 5 arguments, [3] is PUE and [4] is memory coefficient.
+      Defaults are used when only 2 arguments are provided.
+    
+    :param args: List of argument strings.
+    :return: Dictionary mapping argument names to their parsed values.
+    """
+    if len(args) != 2 and len(args) != 5:
+        print_usage_exit_TemporalInterrupt()
+
+    arguments: Dict[str, Union[float, int, str]] = {}
+    arguments[CI] = args[0]
+    arguments[MODEL_NAME] = args[1]
+    
+    if len(args) == 5:
+        arguments[INTERVAL] = int(args[2])
+        arguments[PUE] = float(args[3])
+        arguments[MEMORY_COEFFICIENT] = float(args[4])
+    else: 
+        arguments[INTERVAL] = DEFAULT_INTERVAL_VALUE
         arguments[PUE] = DEFAULT_PUE_VALUE
         arguments[MEMORY_COEFFICIENT] = DEFAULT_MEMORY_POWER_DRAW
 

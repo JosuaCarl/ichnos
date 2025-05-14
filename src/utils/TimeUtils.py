@@ -155,24 +155,6 @@ def get_tasks_by_interval_with_overhead(start_interval: int, end_interval: int, 
 
     return (tasks_by_hour, overheads)
 
-def to_closest_hour_ms(original: float) -> int:
-    """
-    Round a given timestamp (in ms) to the closest hour in ms.
-
-    :param original: Original timestamp in ms.
-    :return: Timestamp in ms rounded to the closest hour.
-    """
-    ts = to_timestamp(original)
-    if ts.minute >= 30:
-        if ts.hour + 1 == 24:
-            ts = ts + time.timedelta(days=1)
-            ts = ts.replace(hour=0, minute=0, second=0, microsecond=0)
-        else:
-            ts = ts.replace(second=0, microsecond=0, minute=0, hour=ts.hour+1)
-    else:
-        ts = ts.replace(second=0, microsecond=0, minute=0)
-    
-    return int(ts.timestamp() * 1000)
 
 def to_closest_interval_ms(original: float, interval: int) -> int:
     """
@@ -187,28 +169,8 @@ def to_closest_interval_ms(original: float, interval: int) -> int:
     ts = ts - time.timedelta(minutes=(ts.minute) % interval)
     return int(ts.timestamp() * 1000)
 
-def get_tasks_by_hour(tasks: List[Any]) -> Tuple[Dict[int, List[Any]], List[int]]:
-    """
-    Extract tasks grouped by hour from a list of tasks.
 
-    :param tasks: List of task objects.
-    :return: Tuple (tasks_by_hour, overheads) as calculated by get_tasks_by_hour_with_overhead.
-    """
-    starts = []
-    ends = []
-    
-    for task in tasks:
-        starts.append(int(task.start))
-        ends.append(int(task.complete))
-    
-    earliest = min(starts)
-    latest = max(ends)
-    earliest_hh = to_closest_hour_ms(earliest)
-    latest_hh = to_closest_hour_ms(latest)
-    
-    return get_tasks_by_hour_with_overhead(earliest_hh, latest_hh, tasks)
-
-def get_tasks_by_interval(tasks: List[Any], interval: int) -> Tuple[Dict[int, List[Any]], List[int]]:
+def get_tasks_by_interval(tasks: List[Any], interval: int) -> Tuple[Tuple[Dict[int, List[Any]], List[int]], Tuple[int, int]]:
     """
     Extract tasks grouped by a specified interval from a list of tasks.
 
@@ -228,32 +190,10 @@ def get_tasks_by_interval(tasks: List[Any], interval: int) -> Tuple[Dict[int, Li
     earliest_interval = to_closest_interval_ms(earliest, interval)
     latest_interval = to_closest_interval_ms(latest, interval)
     
-    return get_tasks_by_interval_with_overhead(earliest_interval, latest_interval, tasks, interval)
+    return (get_tasks_by_interval_with_overhead(earliest_interval, latest_interval, tasks, interval), (earliest, latest))
 
-def extract_tasks_by_hour(filename: str) -> Tuple[Dict[int, List[Any]], List[int]]:
-    """
-    Extract tasks grouped by hour from a trace file.
-    
-    :param filename: Trace file name (without extension).
-    :return: Tuple (tasks_by_hour, overheads) from the parsed trace file.
-    """
-    if len(filename.split(".")) > 1:
-        filename = filename.split(".")[-2]
-    try:
-        records = parse_trace_file(f"data/trace/{filename}.{FILE}")
-    except Exception as e:
-        logging.error("Failed to parse trace file %s: %s", f"data/trace/{filename}.{FILE}", e)
-        raise
-    data_records = []
-    for record in records:
-        try:
-            data = record.make_carbon_record()
-            data_records.append(data)
-        except Exception as e:
-            logging.error("Error converting record to carbon record: %s", e)
-    return get_tasks_by_hour(data_records)
 
-def extract_tasks_by_interval(filename: str, interval: int) -> Tuple[Dict[int, List[Any]], List[int]]:
+def extract_tasks_by_interval(filename: str, interval: int) -> Tuple[Tuple[Dict[int, List[Any]], List[int]], Tuple[int, int]]:
     """
     Extract tasks grouped by a specified interval from a trace file.
     
@@ -277,21 +217,21 @@ def extract_tasks_by_interval(filename: str, interval: int) -> Tuple[Dict[int, L
             logging.error("Error converting record to carbon record: %s", e)
     return get_tasks_by_interval(data_records, interval)
 
-def get_hours(arr: List[int]) -> List[int]:
+def get_intervals(arr: List[int]) -> List[int]:
     """
-    Identify discontinuities in a list of hourly timestamps to detect overhead periods.
+    Identify discontinuities in a list of interval timestamps to detect overhead periods.
 
     :param arr: List of consecutive hour timestamps.
     :return: List of indices where discontinuities (gaps) occur.
     """
-    hours = []
+    intervals = []
     prev = arr[0]
     i = 1
     
     while i < len(arr):
         if not (prev + 1 == arr[i]):
-            hours.append(i - 1)
+            intervals.append(i - 1)
         prev = arr[i]
         i += 1
     
-    return hours
+    return intervals
