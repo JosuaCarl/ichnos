@@ -27,13 +27,14 @@ def calculate_cpu_embodied_carbon(cpu_model: str, duration_used: float, lifetime
     embodied_carbon_kg *= cpu_usage  # Adjust for CPU usage
     return embodied_carbon_kg * 1000  # Convert to grams
 
-def embodied_carbon_for_carbon_records(records: List[CarbonRecord], use_cpu_usage: bool = False) -> float:
+def embodied_carbon_for_carbon_records(records: List[CarbonRecord], use_cpu_usage: bool = False, fallback_cpu_model: str = None) -> float:
     """
 	Calculate the embodied carbon for a list of CarbonRecord objects.
 	
 	Parameters:
 	records (List[CarbonRecord]): A list of CarbonRecord objects.
 	use_cpu_usage (bool): Flag to indicate whether to consider CPU usage in calculations.
+	fallback_cpu_model (str): The CPU model to use if the record does not have a valid cpu_model.
 	
 	Returns:
 	float: The total embodied carbon in kilograms.
@@ -41,7 +42,7 @@ def embodied_carbon_for_carbon_records(records: List[CarbonRecord], use_cpu_usag
 	
     total_embodied_carbon = 0.0
     for record in records:
-        cpu_model = record.cpu_model
+        cpu_model = record.cpu_model if (record.cpu_model is not None and record.cpu_model != "None") else fallback_cpu_model
         duration_used = record.realtime / 1000 / 3600  # convert from ms to hours
         adjusted_cpu_usage = 1.0
         if use_cpu_usage:
