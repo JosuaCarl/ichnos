@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Tuple
 from src.utils.TimeUtils import to_timestamp, extract_tasks_by_interval
 from src.utils.Parsers import parse_ci_intervals, parse_arguments
 from src.utils.FileWriters import write_summary_file, write_task_trace_and_rank_report
+from src.utils.NodeConfigModelReader import get_cpu_model
 from src.Constants import *
 from src.scripts.OperationalCarbon import calculate_carbon_footprint_ccf
 from src.scripts.EmbodiedCarbon import embodied_carbon_for_carbon_records
@@ -51,7 +52,8 @@ def main(arguments: Dict[str, Any]) -> Tuple[str, float]:
     cf, records_res = calculate_carbon_footprint_ccf(tasks_by_interval, ci, pue, model_name, memory_coefficient, check_reserved_memory_flag)
     cpu_energy, cpu_energy_pue, mem_energy, mem_energy_pue, op_carbon_emissions, node_memory_usage = cf
 
-    emb_carbon_emissions = embodied_carbon_for_carbon_records(records_res, use_cpu_usage=False)
+    fallback_cpu_model: str = get_cpu_model(model_name)
+    emb_carbon_emissions = embodied_carbon_for_carbon_records(records_res, use_cpu_usage=False, fallback_cpu_model=fallback_cpu_model)
     total_carbon_emissions = op_carbon_emissions + emb_carbon_emissions
 
     summary += "\nCloud Carbon Footprint Method:\n"

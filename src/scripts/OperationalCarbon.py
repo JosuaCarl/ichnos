@@ -1,7 +1,8 @@
 from typing import Any, Callable, Dict, List, Tuple, Union
 from src.models.CarbonRecord import CarbonRecord
 from src.utils.TimeUtils import to_timestamp, extract_tasks_by_interval
-from src.utils.PowerModel import get_power_model, get_memory_draw, get_system_cores
+from src.utils.PowerModel import get_power_model
+from src.utils.NodeConfigModelReader import get_memory_draw, get_system_cores
 from src.utils.Parsers import parse_arguments, parse_ci_intervals
 from src.Constants import *
 
