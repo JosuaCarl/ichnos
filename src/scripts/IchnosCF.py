@@ -88,14 +88,14 @@ def main(arguments: Dict[str, Any]) -> Tuple[str, float]:
         print(res_report)
         print(energy_split_report)
 
-    if TASK_FLAG:
-        total_time: float = 0.0
+    # if TASK_FLAG:
+    #     total_time: float = 0.0
 
-        for _, tasks_list in tasks_by_interval.items():
-            for task in tasks_list:
-                total_time += task.realtime
+    #     for _, tasks_list in tasks_by_interval.items():
+    #         for task in tasks_list:
+    #             total_time += task.realtime
 
-        summary += f"\nTask Runtime: {total_time}ms\n"
+    #     summary += f"\nTask Runtime: {total_time}ms\n"
 
     # Report Summary
     if isinstance(ci, float):

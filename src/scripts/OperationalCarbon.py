@@ -121,10 +121,10 @@ if __name__ == "__main__":
 
     ((tasks_by_interval, _), _) = extract_tasks_by_interval(workflow, interval)
     
-    for curr_interval, records_list in tasks_by_interval.items():
-        print(f'interval: {to_timestamp(curr_interval)}')
-        if records_list:
-            print(f'tasks: {", ".join([record.id for record in records_list])}')
+    # for curr_interval, records_list in tasks_by_interval.items():
+        # print(f'interval: {to_timestamp(curr_interval)}')
+        # if records_list:
+        #     print(f'tasks: {", ".join([record.id for record in records_list])}')
     
     if isinstance(arguments[CI], float):
         ci = arguments[CI]
