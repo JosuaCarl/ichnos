@@ -30,5 +30,5 @@ WORKFLOWS_S = [
     'nanoseq-3'
 ]
 WORKFLOWS_TEST = [
-    'test'
+    'ampliseq-1'
 ]

@@ -22,8 +22,8 @@ OUT_FILE = "out-file"
 
 
 # Functions
-def create_trace_file(trace_filepath, delim, offset, new_filename):
-    with open(trace_filepath, 'r') as file:
+def create_trace_file(trace, delim, offset, new_filename):
+    with open(f'{trace}.csv', 'r') as file:
         raw = file.readlines()
         header = raw[0].split(delim)
         data = raw[1:]
@@ -110,8 +110,7 @@ def validate_arguments(args):
 
 def convert(settings):
     command = settings[COMMAND]
-    filepath = settings[TRACE_FILE]
-    filename = filepath.split("/")[2].split(".")
+    filename = settings[TRACE_FILE]
     delimiter = settings[DELIMITER]
     output_filename = f"data/trace/{settings[OUT_FILE]}.csv"
     offset = None
@@ -129,7 +128,7 @@ def convert(settings):
             offset *= -1
 
     #output_filename += f"~{int(offset)}.{filename[1]}"
-    return create_trace_file(filepath, delimiter, offset, output_filename)
+    return create_trace_file(filename, delimiter, offset, output_filename)
 
 def convertor(command):
     parts = command.split(" ")

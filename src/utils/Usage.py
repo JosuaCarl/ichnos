@@ -11,8 +11,8 @@ def print_usage_exit_TemporalInterrupt() -> None:
     """
     Print usage information for the TemporalInterrupt script and exit.
     """
-    usage = "$ python -m src.scripts.TemporalInterrupt <ci-file-name> <pue> <memory_coefficient> <min-watts> <max-watts>"
-    example = "$ python -m src.scripts.TemporalInterrupt ci 1.0 0.392 65 219"
+    usage = "$ python -m src.scripts.TemporalInterrupt <ci-file-name> <power_model> <? interval=60> <? pue=1.0> <? memory-coeff=0.392>"
+    example = "$ python -m src.scripts.TemporalInterrupt ci gpg14_performance_minmax 60 1.0 0.392"
     logging.error(usage)
     logging.error(example)
     exit(-1)
@@ -57,8 +57,8 @@ def print_usage_exit_Explorer() -> None:
     """
     Print usage information for the Explorer script and exit.
     """
-    usage = "[Explorer] Expected Usage: py explorer.py <trace-file> <ci-file> <config> <shift> <min-watts> <max-watts>"
-    example = "[Explorer] Example Use: py explorer.py test.csv ci-20240218.csv default 12 30 80"
+    usage = "[Explorer] Expected Usage: py explorer.py <trace-file> <ci-file> <shift> <model-name> <interval> <pue> <memory-coefficient>"
+    example = "[Explorer] Example Use: py explorer.py test ci-20240218 6 gpg14_performance 60 1.0 0.392"
     logging.error(usage)
     logging.error(example)
     exit(-1)
