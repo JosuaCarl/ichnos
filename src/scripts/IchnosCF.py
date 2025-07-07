@@ -117,7 +117,7 @@ def get_carbon_footprint(command: str) -> Tuple[str, Tuple[float, float]]:
     :param command: Command string.
     :return: A tuple of (summary string, carbon emissions).
     """
-    arguments: Dict[str, Any] = parse_arguments(command.split(' '))
+    arguments: Dict[str, Any] = parse_arguments_with_config(command.split(' '))
     return main(arguments)
 
 
