@@ -1,11 +1,12 @@
+import logging
 from typing import Any, Dict, List, Tuple
 from src.utils.TimeUtils import to_timestamp, extract_tasks_by_interval
-from src.utils.Parsers import parse_ci_intervals, parse_arguments
+from src.utils.Parsers import parse_ci_intervals, parse_arguments, parse_trace_file
 from src.utils.FileWriters import write_summary_file, write_task_trace_and_rank_report
 from src.utils.NodeConfigModelReader import get_cpu_model
 from src.Constants import *
 from src.scripts.OperationalCarbon import calculate_carbon_footprint_ccf
-from src.scripts.EmbodiedCarbon import embodied_carbon_for_carbon_records
+from src.scripts.EmbodiedCarbon import embodied_carbon_for_trace_records
 
 import sys
 
@@ -28,6 +29,17 @@ def main(arguments: Dict[str, Any]) -> Tuple[str, float]:
         memory_coefficient = DEFAULT_MEMORY_POWER_DRAW
 
     ((tasks_by_interval, _), _) = extract_tasks_by_interval(workflow, interval)
+
+    ## Get raw TraceRecords for computing embodied carbon
+    filename: str = workflow
+    if len(filename.split(".")) > 1:
+        filename = filename.split(".")[-2]
+    try:
+        trace_records = parse_trace_file(f"data/trace/{filename}.{FILE}")
+    except Exception as e:
+        logging.error("Failed to parse trace file %s: %s", f"data/trace/{filename}.{FILE}", e)
+        raise
+    #################
 
     # for curr_interval, records_list in tasks_by_interval.items():
     #     print(f'interval: {to_timestamp(curr_interval)}')
@@ -53,7 +65,7 @@ def main(arguments: Dict[str, Any]) -> Tuple[str, float]:
     cpu_energy, cpu_energy_pue, mem_energy, mem_energy_pue, op_carbon_emissions, node_memory_usage = cf
 
     fallback_cpu_model: str = get_cpu_model(model_name)
-    emb_carbon_emissions = embodied_carbon_for_carbon_records(records_res, use_cpu_usage=False, fallback_cpu_model=fallback_cpu_model)
+    emb_carbon_emissions = embodied_carbon_for_trace_records(trace_records, use_cpu_usage=False, fallback_cpu_model=fallback_cpu_model)
     total_carbon_emissions = op_carbon_emissions + emb_carbon_emissions
 
     summary += "\nCloud Carbon Footprint Method:\n"
