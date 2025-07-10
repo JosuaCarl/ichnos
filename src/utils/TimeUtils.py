@@ -187,11 +187,19 @@ def get_tasks_by_interval(tasks: List[CarbonRecord], interval: int) -> TaskExtra
     latest = max(ends)
     earliest_interval = to_closest_interval_ms(earliest, interval)
     latest_interval = to_closest_interval_ms(latest, interval)
-    
-    tasks_by_time_result = get_tasks_by_interval_with_overhead(earliest_interval, latest_interval, tasks, interval)
-    tasks_by_interval = tasks_by_time_result.tasks_by_time
-    
-    return TaskExtractionResult(tasks_by_interval=tasks_by_interval, all_tasks=tasks)
+
+    tasks_by_interval_result = get_tasks_by_interval_with_overhead(earliest_interval, latest_interval, tasks, interval)
+    tasks_by_interval = tasks_by_interval_result.tasks_by_time
+    overhead_intervals = tasks_by_interval_result.overheads
+
+    return TaskExtractionResult(
+        tasks_by_interval=tasks_by_interval,
+        all_tasks=tasks,
+        workflow_start=earliest,
+        workflow_end=latest,
+        overhead_intervals=overhead_intervals
+    )
+
 
 def extract_tasks_by_interval(filename: str, interval: int) -> TaskExtractionResult:
     """

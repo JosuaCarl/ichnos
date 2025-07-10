@@ -10,3 +10,6 @@ class TaskExtractionResult:
     """
     tasks_by_interval: Dict[datetime, List[CarbonRecord]]
     all_tasks: List[CarbonRecord]
+    overhead_intervals: List[int]
+    workflow_start: int
+    workflow_end: int
