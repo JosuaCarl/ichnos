@@ -3,10 +3,11 @@ from src.models.CarbonRecord import CarbonRecord
 from src.utils.TimeUtils import to_timestamp, extract_tasks_by_interval
 from src.utils.PowerModel import get_power_model
 from src.utils.NodeConfigModelReader import get_memory_draw, get_system_cores
-from src.utils.Parsers import parse_arguments, parse_ci_intervals
+from src.utils.Parsers import parse_ci_intervals, parse_arguments_with_config
 from src.Constants import *
 
 import sys
+import yaml
 
 # Estimate Energy Consumption
 def estimate_task_energy_consumption_ccf(task: CarbonRecord, model: Callable[[float], float], model_name: str, memory_coefficient: float, system_cores: int) -> Tuple[float, float]:
@@ -107,7 +108,7 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[Any, List[Car
 if __name__ == "__main__":
     # Parse Arguments
     args: List[str] = sys.argv[1:]
-    arguments: Dict[str, Any] = parse_arguments(args)
+    arguments: Dict[str, Any] = parse_arguments_with_config(args)
 
     # Data
     workflow: str = arguments[TRACE]
@@ -121,10 +122,10 @@ if __name__ == "__main__":
 
     ((tasks_by_interval, _), _) = extract_tasks_by_interval(workflow, interval)
     
-    for curr_interval, records_list in tasks_by_interval.items():
-        print(f'interval: {to_timestamp(curr_interval)}')
-        if records_list:
-            print(f'tasks: {", ".join([record.id for record in records_list])}')
+    # for curr_interval, records_list in tasks_by_interval.items():
+        # print(f'interval: {to_timestamp(curr_interval)}')
+        # if records_list:
+        #     print(f'tasks: {", ".join([record.id for record in records_list])}')
     
     if isinstance(arguments[CI], float):
         ci = arguments[CI]

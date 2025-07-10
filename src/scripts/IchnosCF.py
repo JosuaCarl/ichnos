@@ -1,7 +1,7 @@
 import logging
 from typing import Any, Dict, List, Tuple
 from src.utils.TimeUtils import to_timestamp, extract_tasks_by_interval
-from src.utils.Parsers import parse_ci_intervals, parse_arguments, parse_trace_file
+from src.utils.Parsers import parse_ci_intervals, parse_arguments_with_config, parse_trace_file
 from src.utils.FileWriters import write_summary_file, write_task_trace_and_rank_report
 from src.utils.NodeConfigModelReader import get_cpu_model
 from src.Constants import *
@@ -9,6 +9,7 @@ from src.scripts.OperationalCarbon import calculate_carbon_footprint_ccf
 from src.scripts.EmbodiedCarbon import embodied_carbon_for_trace_records
 
 import sys
+import yaml
 
 def main(arguments: Dict[str, Any]) -> Tuple[str, float]:
     """
@@ -100,14 +101,14 @@ def main(arguments: Dict[str, Any]) -> Tuple[str, float]:
         print(res_report)
         print(energy_split_report)
 
-    if TASK_FLAG:
-        total_time: float = 0.0
+    # if TASK_FLAG:
+    #     total_time: float = 0.0
 
-        for _, tasks_list in tasks_by_interval.items():
-            for task in tasks_list:
-                total_time += task.realtime
+    #     for _, tasks_list in tasks_by_interval.items():
+    #         for task in tasks_list:
+    #             total_time += task.realtime
 
-        summary += f"\nTask Runtime: {total_time}ms\n"
+    #     summary += f"\nTask Runtime: {total_time}ms\n"
 
     # Report Summary
     if isinstance(ci, float):
@@ -128,7 +129,7 @@ def get_carbon_footprint(command: str) -> Tuple[str, Tuple[float, float]]:
     :param command: Command string.
     :return: A tuple of (summary string, carbon emissions).
     """
-    arguments: Dict[str, Any] = parse_arguments(command.split(' '))
+    arguments: Dict[str, Any] = parse_arguments_with_config(command.split(' '))
     return main(arguments)
 
 
@@ -136,5 +137,5 @@ def get_carbon_footprint(command: str) -> Tuple[str, Tuple[float, float]]:
 if __name__ == '__main__':
     # Parse Arguments
     args: List[str] = sys.argv[1:]
-    arguments: Dict[str, Any] = parse_arguments(args)
+    arguments: Dict[str, Any] = parse_arguments_with_config(args)
     main(arguments)
