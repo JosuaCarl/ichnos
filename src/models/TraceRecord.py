@@ -131,6 +131,9 @@ class TraceRecord:
     @property
     def realtime(self):
         return self._realtime
+    @realtime.setter
+    def realtime(self, value: float):
+        self._realtime = value
 
     @property
     def submit(self):
@@ -139,10 +142,16 @@ class TraceRecord:
     @property
     def complete(self):
         return self._complete
+    @complete.setter
+    def complete(self, value):  
+        self._complete = value
 
     @property
     def start(self):
         return self._start
+    @start.setter
+    def start(self, value):
+        self._start = value
 
     def __str__(self) -> str:
         """

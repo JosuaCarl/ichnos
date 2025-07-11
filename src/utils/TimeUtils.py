@@ -8,10 +8,12 @@ extract tasks over specified time intervals.
 import datetime as time
 import copy
 import logging
-from typing import Any, List, Dict, Tuple
+from typing import List
 
+from src.models.TaskExtractionResult import TaskExtractionResult
 from src.models.TraceRecord import TraceRecord
 from src.models.CarbonRecord import CarbonRecord
+from src.models.TasksByTimeResult import TasksByTimeResult
 from src.utils.Parsers import parse_trace_file
 from src.Constants import FILE, DAY, MONTH, YEAR, HOUR, MINS
 from datetime import datetime
@@ -45,14 +47,14 @@ def to_timestamp_from_str(ts_str: str) -> datetime:
     stamp = datetime.strptime(ts_str, "%Y-%m-%dT%H:%MZ")
     return stamp.timestamp() * 1000
 
-def get_tasks_by_hour_with_overhead(start_hour: int, end_hour: int, tasks: List[CarbonRecord]) -> Tuple[Dict[int, List[Any]], List[int]]:
+def get_tasks_by_hour_with_overhead(start_hour: int, end_hour: int, tasks: List[CarbonRecord]) -> TasksByTimeResult:
     """
     Group tasks by hour with additional overhead calculations.
 
     :param start_hour: Start time in ms representing the beginning hour.
     :param end_hour: End time in ms representing the ending hour.
     :param tasks: List of task objects.
-    :return: Tuple of dictionary mapping hour (ms) to tasks and list of overhead values.
+    :return: A TasksByTimeResult object containing tasks grouped by hour and overheads.
     """
     tasks_by_hour = {}
     overheads = []
@@ -97,9 +99,9 @@ def get_tasks_by_hour_with_overhead(start_hour: int, end_hour: int, tasks: List[
         overheads.append(hour_overhead)
         i += step
 
-    return (tasks_by_hour, overheads)
+    return TasksByTimeResult(tasks_by_time=tasks_by_hour, overheads=overheads)
 
-def get_tasks_by_interval_with_overhead(start_interval: int, end_interval: int, tasks: List[Any], interval: int) -> Tuple[Dict[int, List[Any]], List[int]]:
+def get_tasks_by_interval_with_overhead(start_interval: int, end_interval: int, tasks: List[CarbonRecord], interval: int) -> TasksByTimeResult:
     """
     Group tasks by a user-defined interval with overhead calculations.
 
@@ -107,7 +109,7 @@ def get_tasks_by_interval_with_overhead(start_interval: int, end_interval: int, 
     :param end_interval: End interval in ms.
     :param tasks: List of task objects.
     :param interval: Interval in minutes.
-    :return: Tuple of dictionary mapping interval (ms) to tasks and list of overhead values.
+    :return: A TasksByTimeResult object containing tasks grouped by interval and overheads.
     """
     tasks_by_hour = {}
     overheads = []
@@ -153,7 +155,7 @@ def get_tasks_by_interval_with_overhead(start_interval: int, end_interval: int, 
         overheads.append(hour_overhead)
         i += step
 
-    return (tasks_by_hour, overheads)
+    return TasksByTimeResult(tasks_by_time=tasks_by_hour, overheads=overheads)
 
 
 def to_closest_interval_ms(original: float, interval: int) -> int:
@@ -170,36 +172,42 @@ def to_closest_interval_ms(original: float, interval: int) -> int:
     return int(ts.timestamp() * 1000)
 
 
-def get_tasks_by_interval(tasks: List[Any], interval: int) -> Tuple[Tuple[Dict[int, List[Any]], List[int]], Tuple[int, int]]:
+def get_tasks_by_interval(tasks: List[CarbonRecord], interval: int) -> TaskExtractionResult:
     """
     Extract tasks grouped by a specified interval from a list of tasks.
 
     :param tasks: List of task objects.
     :param interval: Interval in minutes.
-    :return: Tuple (tasks_by_interval, overheads) as calculated by get_tasks_by_interval_with_overhead.
+    :return: A TaskExtractionResult object containing tasks grouped by interval and all tasks.
     """
-    starts = []
-    ends = []
-    
-    for task in tasks:
-        starts.append(int(task.start))
-        ends.append(int(task.complete))
+    starts = [int(task.start) for task in tasks]
+    ends = [int(task.complete) for task in tasks]
     
     earliest = min(starts)
     latest = max(ends)
     earliest_interval = to_closest_interval_ms(earliest, interval)
     latest_interval = to_closest_interval_ms(latest, interval)
-    
-    return (get_tasks_by_interval_with_overhead(earliest_interval, latest_interval, tasks, interval), (earliest, latest))
+
+    tasks_by_interval_result = get_tasks_by_interval_with_overhead(earliest_interval, latest_interval, tasks, interval)
+    tasks_by_interval = tasks_by_interval_result.tasks_by_time
+    overhead_intervals = tasks_by_interval_result.overheads
+
+    return TaskExtractionResult(
+        tasks_by_interval=tasks_by_interval,
+        all_tasks=tasks,
+        workflow_start=earliest,
+        workflow_end=latest,
+        overhead_intervals=overhead_intervals
+    )
 
 
-def extract_tasks_by_interval(filename: str, interval: int) -> Tuple[Tuple[Dict[int, List[Any]], List[int]], Tuple[int, int]]:
+def extract_tasks_by_interval(filename: str, interval: int) -> TaskExtractionResult:
     """
     Extract tasks grouped by a specified interval from a trace file.
     
     :param filename: Trace file name (without extension).
     :param interval: Interval in minutes.
-    :return: Tuple (tasks_by_interval, overheads) from the parsed trace file.
+    :return: A TaskExtractionResult object from the parsed trace file.
     """
     if len(filename.split(".")) > 1:
         filename = filename.split(".")[-2]

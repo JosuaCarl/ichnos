@@ -1,15 +1,19 @@
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Callable, Dict, List, Tuple, Union
 from src.models.CarbonRecord import CarbonRecord
+from src.models.TaskEnergyResult import TaskEnergyResult
+from src.models.OperationalCarbonResult import OperationalCarbonResult
 from src.utils.TimeUtils import to_timestamp, extract_tasks_by_interval
 from src.utils.PowerModel import get_power_model
 from src.utils.NodeConfigModelReader import get_memory_draw, get_system_cores
-from src.utils.Parsers import parse_arguments, parse_ci_intervals
+from src.utils.Parsers import parse_ci_intervals, parse_arguments_with_config
 from src.Constants import *
+from datetime import datetime
 
 import sys
+import yaml
 
 # Estimate Energy Consumption
-def estimate_task_energy_consumption_ccf(task: CarbonRecord, model: Callable[[float], float], model_name: str, memory_coefficient: float, system_cores: int) -> Tuple[float, float]:
+def estimate_task_energy_consumption_ccf(task: CarbonRecord, model: Callable[[float], float], model_name: str, memory_coefficient: float, system_cores: int) -> TaskEnergyResult:
     """
     Estimate the energy consumptions for a task.
     
@@ -18,7 +22,7 @@ def estimate_task_energy_consumption_ccf(task: CarbonRecord, model: Callable[[fl
     :param model_name: Name of the power model.
     :param memory_coefficient: Coefficient for memory power draw.
     :param system_cores: no. of cores on the system utilised. 
-    :return: Tuple (core energy consumption, memory energy consumption) in kWh.
+    :return: TaskEnergyResult object containing core and memory energy consumption in kWh.
     """
     if not system_cores:
         system_cores = 32
@@ -38,11 +42,11 @@ def estimate_task_energy_consumption_ccf(task: CarbonRecord, model: Callable[[fl
     # Memory Power Consumption (without PUE)
     memory_consumption: float = memory * memory_coefficient * time_h * 0.001  # convert from W to kW
     # Overall and Memory Consumption (kWh) (without PUE)
-    return (core_consumption, memory_consumption)
+    return TaskEnergyResult(core_consumption=core_consumption, memory_consumption=memory_consumption)
 
 
 # Estimate Carbon Footprint 
-def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[Any, List[CarbonRecord]], ci: Union[float, Dict[str, float]], pue: float, model_name: str, memory_coefficient: float, check_node_memory: bool = False) -> Tuple[Tuple[float, float, float, float, float, List[Any]], List[CarbonRecord]]:
+def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[datetime, List[CarbonRecord]], ci: Union[float, Dict[str, float]], pue: float, model_name: str, memory_coefficient: float, check_node_memory: bool = False) -> OperationalCarbonResult:
     """
     Calculate the carbon footprint using the CCF methodology.
     
@@ -60,7 +64,7 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[Any, List[Car
     total_memory_energy_pue: float = 0.0
     total_carbon_emissions: float = 0.0
     records: List[CarbonRecord] = []
-    node_memory_used: List[Any] = []
+    node_memory_used: List[Tuple[float, float]] = []
     power_model = get_power_model(model_name)
     system_cores = get_system_cores(model_name)
     memory_coefficient = get_memory_draw(model_name)
@@ -88,7 +92,8 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[Any, List[Car
                 node_memory_used.append((realtime, ci_val))
 
             for task in tasks:
-                energy, memory = estimate_task_energy_consumption_ccf(task, power_model, model_name, memory_coefficient, system_cores)
+                energy_result = estimate_task_energy_consumption_ccf(task, power_model, model_name, memory_coefficient, system_cores)
+                energy, memory = energy_result.core_consumption, energy_result.memory_consumption
                 energy_pue: float = energy * pue
                 memory_pue: float = memory * pue
                 task_footprint: float = (energy_pue + memory_pue) * ci_val
@@ -102,12 +107,20 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[Any, List[Car
                 total_carbon_emissions += task_footprint
                 records.append(task)
 
-    return ((total_energy, total_energy_pue, total_memory_energy, total_memory_energy_pue, total_carbon_emissions, node_memory_used), records)
+    return OperationalCarbonResult(
+        cpu_energy=total_energy,
+        cpu_energy_pue=total_energy_pue,
+        memory_energy=total_memory_energy,
+        memory_energy_pue=total_memory_energy_pue,
+        carbon_emissions=total_carbon_emissions,
+        node_memory_usage=node_memory_used,
+        records=records
+    )
 
 if __name__ == "__main__":
     # Parse Arguments
     args: List[str] = sys.argv[1:]
-    arguments: Dict[str, Any] = parse_arguments(args)
+    arguments = parse_arguments_with_config(args)
 
     # Data
     workflow: str = arguments[TRACE]

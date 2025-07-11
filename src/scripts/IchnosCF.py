@@ -1,20 +1,25 @@
-from typing import Any, Dict, List, Tuple
+import logging
+from typing import Dict, List, Tuple, Union
 from src.utils.TimeUtils import to_timestamp, extract_tasks_by_interval
-from src.utils.Parsers import parse_ci_intervals, parse_arguments
+from src.utils.Parsers import parse_ci_intervals, parse_arguments_with_config, parse_trace_file
 from src.utils.FileWriters import write_summary_file, write_task_trace_and_rank_report
 from src.utils.NodeConfigModelReader import get_cpu_model
 from src.Constants import *
 from src.scripts.OperationalCarbon import calculate_carbon_footprint_ccf
-from src.scripts.EmbodiedCarbon import embodied_carbon_for_carbon_records
+from src.scripts.EmbodiedCarbon import embodied_carbon_for_trace_records
+from src.models.IchnosResult import IchnosResult
+from src.models.OperationalCarbonResult import OperationalCarbonResult
+from src.models.TaskExtractionResult import TaskExtractionResult
 
 import sys
+import yaml
 
-def main(arguments: Dict[str, Any]) -> Tuple[str, float]:
+def main(arguments: Dict[str, Union[str, float, int]]) -> IchnosResult:
     """
     Main function to compute and report the carbon footprint.
     
     :param arguments: Argument dictionary parsed from command line.
-    :return: A tuple of (summary string, carbon emissions).
+    :return: An IchnosResult object containing the summary and emissions.
     """
 
     # Data
@@ -27,7 +32,19 @@ def main(arguments: Dict[str, Any]) -> Tuple[str, float]:
     if memory_coefficient is None:
         memory_coefficient = DEFAULT_MEMORY_POWER_DRAW
 
-    ((tasks_by_interval, _), _) = extract_tasks_by_interval(workflow, interval)
+    task_extraction_result: TaskExtractionResult = extract_tasks_by_interval(workflow, interval)
+    tasks_by_interval = task_extraction_result.tasks_by_interval
+
+    ## Get raw TraceRecords for computing embodied carbon
+    filename: str = workflow
+    if len(filename.split(".")) > 1:
+        filename = filename.split(".")[-2]
+    try:
+        trace_records = parse_trace_file(f"data/trace/{filename}.{FILE}")
+    except Exception as e:
+        logging.error("Failed to parse trace file %s: %s", f"data/trace/{filename}.{FILE}", e)
+        raise
+    #################
 
     # for curr_interval, records_list in tasks_by_interval.items():
     #     print(f'interval: {to_timestamp(curr_interval)}')
@@ -49,11 +66,17 @@ def main(arguments: Dict[str, Any]) -> Tuple[str, float]:
 
     check_reserved_memory_flag: bool = RESERVED_MEMORY in arguments
 
-    cf, records_res = calculate_carbon_footprint_ccf(tasks_by_interval, ci, pue, model_name, memory_coefficient, check_reserved_memory_flag)
-    cpu_energy, cpu_energy_pue, mem_energy, mem_energy_pue, op_carbon_emissions, node_memory_usage = cf
+    op_carbon_result = calculate_carbon_footprint_ccf(tasks_by_interval, ci, pue, model_name, memory_coefficient, check_reserved_memory_flag)
+    cpu_energy = op_carbon_result.cpu_energy
+    cpu_energy_pue = op_carbon_result.cpu_energy_pue
+    mem_energy = op_carbon_result.memory_energy
+    mem_energy_pue = op_carbon_result.memory_energy_pue
+    op_carbon_emissions = op_carbon_result.carbon_emissions
+    node_memory_usage = op_carbon_result.node_memory_usage
+    records_res = op_carbon_result.records
 
     fallback_cpu_model: str = get_cpu_model(model_name)
-    emb_carbon_emissions = embodied_carbon_for_carbon_records(records_res, use_cpu_usage=False, fallback_cpu_model=fallback_cpu_model)
+    emb_carbon_emissions = embodied_carbon_for_trace_records(trace_records, use_cpu_usage=False, fallback_cpu_model=fallback_cpu_model)
     total_carbon_emissions = op_carbon_emissions + emb_carbon_emissions
 
     summary += "\nCloud Carbon Footprint Method:\n"
@@ -106,17 +129,21 @@ def main(arguments: Dict[str, Any]) -> Tuple[str, float]:
     write_summary_file("output", workflow + "-" + ci + "-" + model_name, summary)
     write_task_trace_and_rank_report("output", workflow + "-" + ci + "-" + model_name, records_res)
 
-    return (summary, (op_carbon_emissions, emb_carbon_emissions))
+    return IchnosResult(
+        summary=summary,
+        operational_emissions=op_carbon_result.carbon_emissions,
+        embodied_emissions=emb_carbon_emissions
+    )
 
 
-def get_carbon_footprint(command: str) -> Tuple[str, Tuple[float, float]]:
+def get_carbon_footprint(command: str) -> IchnosResult:
     """
     Parse the command and compute the carbon footprint.
     
     :param command: Command string.
     :return: A tuple of (summary string, carbon emissions).
     """
-    arguments: Dict[str, Any] = parse_arguments(command.split(' '))
+    arguments = parse_arguments_with_config(command.split(' '))
     return main(arguments)
 
 
@@ -124,5 +151,5 @@ def get_carbon_footprint(command: str) -> Tuple[str, Tuple[float, float]]:
 if __name__ == '__main__':
     # Parse Arguments
     args: List[str] = sys.argv[1:]
-    arguments: Dict[str, Any] = parse_arguments(args)
+    arguments = parse_arguments_with_config(args)
     main(arguments)

@@ -6,6 +6,8 @@ apply temporal shifting based on carbon intensity, and generate corresponding re
 
 from src.models.TraceRecord import TraceRecord
 from src.models.CarbonRecord import CarbonRecord
+from src.models.TaskExtractionResult import TaskExtractionResult
+from src.models.OperationalCarbonResult import OperationalCarbonResult
 from src.WorkflowNameConstants import *
 from src.Constants import CI, TRACE, PUE, MODEL_NAME, MEMORY_COEFFICIENT, INTERVAL
 from src.utils.TimeUtils import to_timestamp, get_intervals, extract_tasks_by_interval
@@ -15,27 +17,27 @@ from src.utils.Parsers import parse_arguments_TemporalInterrupt
 
 import sys
 import numpy as np
-from typing import Dict, List, Tuple, Callable, Any
+from typing import Dict, List, Tuple, Callable, Union
 
 
-def explore_temporal_shifting_for_workflow(workflow: Any, tasks_by_interval: Dict[str, List[CarbonRecord]], ci: Dict[str, float], model_name: str, overhead_intervals: Dict[int, float], pue: float, memory_coefficient: float, wf_start: int, wf_end: int) -> str:
+def explore_temporal_shifting_for_workflow(workflow: str, task_extraction_result: TaskExtractionResult, ci: Dict[str, float], model_name: str, pue: float, memory_coefficient: float) -> str:
     """
     Explore shifting of workflow execution times based on minimum carbon intensity.
 
     Parameters:
-        workflow (Any): The workflow identifier.
-        tasks_by_hour (Dict[str, List[CarbonRecord]]): Tasks grouped by hour.
+        workflow (str): The workflow identifier.
+        task_extraction_result (TaskExtractionResult): The result of task extraction.
         ci (Dict[str, float]): Carbon intensity values keyed by time.
         model_name (str): Model name for utilised resources.
-        overhead_intervals (Dict[int, float]): Overhead intervals for shifting.
         pue (float): Power usage effectiveness multiplier.
         memory_coefficient (float): Coefficient for memory consumption.
-        wf_start (int): Workflow earliest task timestamp.
-        wf_end (int): Workflow latest task completion timestamp. 
 
     Returns:
         str: A comma-separated string output with original and shifted carbon footprint details.
     """
+    tasks_by_interval = task_extraction_result.tasks_by_interval
+    overhead_intervals = task_extraction_result.overhead_intervals
+
     # Identify Hours in Order
     intervals_by_key = {}
 
@@ -50,9 +52,12 @@ def explore_temporal_shifting_for_workflow(workflow: Any, tasks_by_interval: Dic
             intervals_by_key[key] = tasks
 
     # Calculate Original Carbon Footprint
-    ((_, _, _, _, orig_carbon_emissions, _), _) = calculate_carbon_footprint_ccf(tasks_by_interval, ci, pue, model_name, memory_coefficient, False)
+    orig_carbon_result = calculate_carbon_footprint_ccf(tasks_by_interval, ci, pue, model_name, memory_coefficient, False)
+    orig_carbon_emissions = orig_carbon_result.carbon_emissions
 
     # Calculate Original Workflow Makespan in seconds
+    wf_start = task_extraction_result.workflow_start
+    wf_end = task_extraction_result.workflow_end
     makespan = (wf_end - wf_start) / 1000
 
     # Prepare Script Output
@@ -80,7 +85,8 @@ def explore_temporal_shifting_for_workflow(workflow: Any, tasks_by_interval: Dic
             ci_for_shifted_trace[keys[i]] = ci[min_keys[i]]
 
         # Report Optimal CI Temporal Shifting Carbon Footprint
-        ((_, _, _, _, carbon_emissions, _), _) = calculate_carbon_footprint_ccf(tasks_by_interval, ci_for_shifted_trace, pue, model_name, memory_coefficient, False)
+        shifted_carbon_result = calculate_carbon_footprint_ccf(tasks_by_interval, ci_for_shifted_trace, pue, model_name, memory_coefficient, False)
+        carbon_emissions = shifted_carbon_result.carbon_emissions
 
         # Report Overhead of Interrupting Temporal Shifting
         oh_interval_inds = get_intervals(ind)
@@ -100,14 +106,14 @@ def explore_temporal_shifting_for_workflow(workflow: Any, tasks_by_interval: Dic
     return ','.join(output)
 
 
-def main(workflows: List[Any], ci: Dict[str, float], arguments: Dict[str, Any], outfilename: str) -> None:
+def main(workflows: List[str], ci: Dict[str, float], arguments: Dict[str, Union[str, float, int]], outfilename: str) -> None:
     """
     Main function to process workflows and write the temporal shifting report.
 
     Parameters:
-        workflows (List[Any]): List of workflow identifiers.
+        workflows (List[str]): List of workflow identifiers.
         ci (Dict[str, float]): Carbon intensity values.
-        arguments (Dict[str, Any]): Argument dictionary parsed from command line.
+        arguments (Dict[str, Union[str, float, int]]): Argument dictionary parsed from command line.
         outfilename (str): Filename for results
 
     Returns:
@@ -121,9 +127,9 @@ def main(workflows: List[Any], ci: Dict[str, float], arguments: Dict[str, Any], 
     results = []
 
     for workflow in workflows:
-        ((tasks_by_interval, overhead_intervals), (wf_start, wf_end)) = extract_tasks_by_interval(workflow, interval)
+        task_extraction_result = extract_tasks_by_interval(workflow, interval)
 
-        result = explore_temporal_shifting_for_workflow(workflow, tasks_by_interval, ci, model_name, overhead_intervals, pue, memory_coefficient, wf_start, wf_end)
+        result = explore_temporal_shifting_for_workflow(workflow, task_extraction_result, ci, model_name, pue, memory_coefficient)
         results.append(result)
 
     with open(outfilename, 'w') as f:

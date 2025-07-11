@@ -1,5 +1,4 @@
 import json
-from typing import Any
 from src.Constants import DEFAULT_MEMORY_POWER_DRAW
 
 def get_cpu_model(model_name: str) -> str:
@@ -23,7 +22,7 @@ def get_cpu_model(model_name: str) -> str:
   
 		return models[node_id][governor]['cpu_model']
 
-def get_memory_draw(model_name: str) -> Any:
+def get_memory_draw(model_name: str) -> float:
     try:
         with open('node_config_models/nodes.json') as nodes_json_data:
             models = json.load(nodes_json_data)
@@ -37,7 +36,7 @@ def get_memory_draw(model_name: str) -> Any:
     except:
         return DEFAULT_MEMORY_POWER_DRAW
 
-def get_system_cores(model_name: str) -> Any:
+def get_system_cores(model_name: str) -> int:
     with open('node_config_models/nodes.json') as nodes_json_data:
         models = json.load(nodes_json_data)
 
