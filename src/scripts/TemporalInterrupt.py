@@ -64,7 +64,7 @@ def explore_temporal_shifting_for_workflow(workflow: str, task_extraction_result
     output = [workflow, str(orig_carbon_emissions), str(makespan)]
 
     # SHIFTING LOGIC
-    for shift in [6, 12, 24, 48, 96]:  # flexibility to run over windows 'shift' hours before and after the workflow executed
+    for shift in [6, 12, 24, 48, 96]:  # flexibility to run over windows 'shift' hours after the workflow executed
         keys = list(intervals_by_key.keys())  # keys that the workflow executes over
         wf_intervals = len(keys)  # hours of workflow execution
         ci_keys = list(ci.keys())  # all windows that have ci values, as keys
@@ -72,8 +72,8 @@ def explore_temporal_shifting_for_workflow(workflow: str, task_extraction_result
         end = keys[-1]  # workflow end key
         start_i = ci_keys.index(start)  # workflow start index
         end_i = ci_keys.index(end)  # workflow end index
-        shift_keys = ci_keys[start_i - shift:end_i + shift + 1]  # all keys within the shift
-        # reliant on ci data provided being long enough for the shift window, if not this will error
+        shift_keys = ci_keys[start_i:end_i + shift + 1]  # all keys within the shift (only forwards)
+        # shift_keys = ci_keys[start_i - shift:end_i + shift + 1]
 
         dat = np.array([ci[key] for key in shift_keys])  # store corresponding ci values for the potential shifts
         ind = sorted(np.argpartition(dat, wf_intervals)[:wf_intervals])  # indices of the minimum ci values
@@ -106,7 +106,7 @@ def explore_temporal_shifting_for_workflow(workflow: str, task_extraction_result
     return ','.join(output)
 
 
-def main(workflows: List[str], ci: Dict[str, float], arguments: Dict[str, Union[str, float, int]]) -> None:
+def main(workflows: List[str], ci: Dict[str, float], arguments: Dict[str, Union[str, float, int]], outfilename: str) -> None:
     """
     Main function to process workflows and write the temporal shifting report.
 
@@ -114,6 +114,7 @@ def main(workflows: List[str], ci: Dict[str, float], arguments: Dict[str, Union[
         workflows (List[str]): List of workflow identifiers.
         ci (Dict[str, float]): Carbon intensity values.
         arguments (Dict[str, Union[str, float, int]]): Argument dictionary parsed from command line.
+        outfilename (str): Filename for results
 
     Returns:
         None
@@ -131,7 +132,7 @@ def main(workflows: List[str], ci: Dict[str, float], arguments: Dict[str, Union[
         result = explore_temporal_shifting_for_workflow(workflow, task_extraction_result, ci, model_name, pue, memory_coefficient)
         results.append(result)
 
-    with open('output/workflows-temp-shift-interrupt.csv', 'w') as f:
+    with open(outfilename, 'w') as f:
         f.write('workflow,footprint,makespan,flexible-6h,flexible-12h,flexible-24h,flexible-48h,flexible-96h\n')
 
         for result in results:
@@ -142,8 +143,17 @@ def main(workflows: List[str], ci: Dict[str, float], arguments: Dict[str, Union[
 if __name__ == '__main__':
     arguments = sys.argv[1:]
     settings = parse_arguments_TemporalInterrupt(arguments)
-
+    workflow = settings[TRACE]
     ci_source_file = f"data/intensity/{settings[CI]}.csv"
     ci = parse_ci_intervals(ci_source_file)
 
-    main(WORKFLOWS_TEST, ci, settings)
+    workflows = []
+    for i in range(1, 4):
+        workflows.append(f'{workflow}-{i}')
+
+    if 'marg' in settings[CI]:
+        outfilename = f'output/{workflow}-marg-ts.csv'
+    else:
+        outfilename = f'output/{workflow}-avg-ts.csv'
+
+    main(workflows, ci, settings, outfilename)

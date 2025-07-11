@@ -144,5 +144,32 @@
 			"max_watts": 139.26666666666668,
 			"cpu_model": "Intel Xeon Silver 4314"
         }
+	},
+	"gcpc2": {
+		"default": {
+			"system_cores": 8,
+			"mem_draw": 0.392,
+			"min_watts": 13.626984127,
+			"max_watts": 52.3412698413,
+            "cpu_model": "Intel(R) Xeon(R) CPU @ 3.10GHz"
+		}
+	}, 
+	"gcpn2": {
+		"default": {
+			"system_cores": 4,
+			"mem_draw": 0.392,
+			"min_watts": 2.55579743,
+			"max_watts": 14.5698081,
+            "cpu_model": "Intel(R) Xeon(R) CPU @ 2.80GHz"
+		}
+	}, 
+	"gcpn1": {
+		"default": {
+			"system_cores": 2,
+			"mem_draw": 0.392,
+			"min_watts": 1.28920889085,
+			"max_watts": 7.79694761126,
+            "cpu_model": "Intel(R) Xeon(R) CPU @ 2.20GHz"
+		}
 	}
 }

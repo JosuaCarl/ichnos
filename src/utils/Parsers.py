@@ -148,27 +148,29 @@ def parse_arguments_TemporalInterrupt(args: List[str]) -> Dict[str, Union[float,
     Parse command-line arguments for the TemporalInterrupt script.
 
     Expected arguments:
-      - [0]: carbon intensity value or file name
-      - [1]: power model name
+      - [0]: workflow file name
+      - [1]: carbon intensity value or file name
+      - [2]: power model name
       Optionally:
-      - [2]: interval (int)
-      - Given 5 arguments, [3] is PUE and [4] is memory coefficient.
-      Defaults are used when only 2 arguments are provided.
+      - [3]: interval (int)
+      - Given 6 arguments, [4] is PUE and [5] is memory coefficient.
+      Defaults are used when only 3 arguments are provided.
     
     :param args: List of argument strings.
     :return: Dictionary mapping argument names to their parsed values.
     """
-    if len(args) != 2 and len(args) != 5:
+    if len(args) != 3 and len(args) != 6:
         print_usage_exit_TemporalInterrupt()
 
     arguments: Dict[str, Union[float, int, str]] = {}
-    arguments[CI] = args[0]
-    arguments[MODEL_NAME] = args[1]
+    arguments[TRACE] = args[0]
+    arguments[CI] = args[1]
+    arguments[MODEL_NAME] = args[2]
     
-    if len(args) == 5:
-        arguments[INTERVAL] = int(args[2])
-        arguments[PUE] = float(args[3])
-        arguments[MEMORY_COEFFICIENT] = float(args[4])
+    if len(args) == 6:
+        arguments[INTERVAL] = int(args[3])
+        arguments[PUE] = float(args[4])
+        arguments[MEMORY_COEFFICIENT] = float(args[5])
     else: 
         arguments[INTERVAL] = DEFAULT_INTERVAL_VALUE
         arguments[PUE] = DEFAULT_PUE_VALUE
