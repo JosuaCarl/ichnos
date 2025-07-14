@@ -34,14 +34,18 @@ Kathleen West, Yehia Elkhatib and Lauritz Thamsen. "[Ichnos: A Carbon Footprint 
 
 Bibtex:
 ```
-@misc{west2024ichnoscarbonfootprintestimator,
+@misc{west2025ichnoscarbonfootprintestimator,
       title={Ichnos: A Carbon Footprint Estimator for Scientific Workflows}, 
-      author={Kathleen West and Yehia Elkhatib and Lauritz Thamsen},
-      year={2024},
+      author={Kathleen West and Magnus Reid and Yehia Elkhatib and Lauritz Thamsen},
+      year={2025},
       eprint={2411.12456},
+      archivePrefix={arXiv},
+      primaryClass={cs.DC},
       url={https://arxiv.org/abs/2411.12456}, 
 }
 ```
+
+Results and evaluation repository is available [ichnos-results-evaluation](https://github.com/GlasgowC3lab/ichnos-results-evaluation).
 
 ## Credits
 - [Carbon Footprint](src/scripts/CarbonFootprint.py) is adapted from the [nf-co2footprint](https://github.com/nextflow-io/nf-co2footprint) plugin which was based on the carbon footprint computation method developed in the [Green Algorithms](https://www.green-algorithms.org/) project. 
@@ -54,3 +58,4 @@ Bibtex:
   > P. Di Tommaso, M. Chatzou, E. W. Floden, P. P. Barja, E. Palumbo, and C. Notredame,
   > Nature Biotechnology, vol. 35, no. 4, pp. 316–319, Apr. 2017, https://doi.org/10.1038/nbt.3820
 - [Carbon Footprint](src/scripts/CarbonFootprint.py) also features an adaptation of the calculation for variable compute energy usage from the [Cloud Carbon Footprint Methodology](https://www.cloudcarbonfootprint.org/docs/methodology/).
+- [Electricity Maps (2025)](https://www.electricitymaps.com). 2023/4 Hourly Carbon Intensity Data (Version January 27, 2025). Electricity Maps. 
