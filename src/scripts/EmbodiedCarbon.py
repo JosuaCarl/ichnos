@@ -5,7 +5,7 @@ from src.models.TraceRecord import TraceRecord
 from typing import List
 import sys
 
-DEFAULT_CPU_LIFETIME = 5.0 * 365.25 * 24  # 5 years in hours
+DEFAULT_CPU_LIFETIME = 4.0 * 365.25 * 24  # 4 years in hours
 
 def calculate_cpu_embodied_carbon(cpu_model: str, duration_used: float, lifetime: float = None, cpu_usage: float = 1.0) -> float:
     """

@@ -14,3 +14,6 @@ data/trace
 
 data/intensity
 !data/intensity/ci.csv
+
+# Evaluation scripts
+eval_scripts/

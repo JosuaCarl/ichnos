@@ -172,29 +172,38 @@ def to_closest_interval_ms(original: float, interval: int) -> int:
     return int(ts.timestamp() * 1000)
 
 
-def get_tasks_by_interval(tasks: List[CarbonRecord], interval: int) -> TaskExtractionResult:
+def get_tasks_by_interval(trace_records: List[TraceRecord], interval: int) -> TaskExtractionResult:
     """
     Extract tasks grouped by a specified interval from a list of tasks.
 
-    :param tasks: List of task objects.
+    :param trace_records: List of trace records.
     :param interval: Interval in minutes.
     :return: A TaskExtractionResult object containing tasks grouped by interval and all tasks.
     """
-    starts = [int(task.start) for task in tasks]
-    ends = [int(task.complete) for task in tasks]
-    
+    carbon_records = []    
+    for record in trace_records:
+        try:
+            data = record.make_carbon_record()
+            carbon_records.append(data)
+        except Exception as e:
+            logging.error("Error converting record to carbon record: %s", e)
+
+    starts = [int(task.start) for task in carbon_records]
+    ends = [int(task.complete) for task in carbon_records]
+
     earliest = min(starts)
     latest = max(ends)
     earliest_interval = to_closest_interval_ms(earliest, interval)
     latest_interval = to_closest_interval_ms(latest, interval)
 
-    tasks_by_interval_result = get_tasks_by_interval_with_overhead(earliest_interval, latest_interval, tasks, interval)
+    tasks_by_interval_result = get_tasks_by_interval_with_overhead(earliest_interval, latest_interval, carbon_records, interval)
     tasks_by_interval = tasks_by_interval_result.tasks_by_time
     overhead_intervals = tasks_by_interval_result.overheads
 
     return TaskExtractionResult(
         tasks_by_interval=tasks_by_interval,
-        all_tasks=tasks,
+        all_tasks=carbon_records,
+        trace_records=trace_records,
         workflow_start=earliest,
         workflow_end=latest,
         overhead_intervals=overhead_intervals
@@ -212,18 +221,11 @@ def extract_tasks_by_interval(filename: str, interval: int) -> TaskExtractionRes
     if len(filename.split(".")) > 1:
         filename = filename.split(".")[-2]
     try:
-        records = parse_trace_file(f"data/trace/{filename}.{FILE}")
+        trace_records = parse_trace_file(f"data/trace/{filename}.{FILE}")
     except Exception as e:
         logging.error("Failed to parse trace file %s: %s", f"data/trace/{filename}.{FILE}", e)
         raise
-    data_records = []
-    for record in records:
-        try:
-            data = record.make_carbon_record()
-            data_records.append(data)
-        except Exception as e:
-            logging.error("Error converting record to carbon record: %s", e)
-    return get_tasks_by_interval(data_records, interval)
+    return get_tasks_by_interval(trace_records, interval)
 
 def get_intervals(arr: List[int]) -> List[int]:
     """

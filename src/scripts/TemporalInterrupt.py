@@ -12,12 +12,15 @@ from src.WorkflowNameConstants import *
 from src.Constants import CI, TRACE, PUE, MODEL_NAME, MEMORY_COEFFICIENT, INTERVAL
 from src.utils.TimeUtils import to_timestamp, get_intervals, extract_tasks_by_interval
 from src.scripts.OperationalCarbon import calculate_carbon_footprint_ccf
+from src.scripts.EmbodiedCarbon import calculate_cpu_embodied_carbon
 from src.utils.Parsers import parse_ci_intervals
 from src.utils.Parsers import parse_arguments_TemporalInterrupt
+from src.utils.NodeConfigModelReader import get_cpu_model
 
 import sys
 import numpy as np
 from typing import Dict, List, Tuple, Callable, Union
+
 
 
 def explore_temporal_shifting_for_workflow(workflow: str, task_extraction_result: TaskExtractionResult, ci: Dict[str, float], model_name: str, pue: float, memory_coefficient: float) -> str:
@@ -37,6 +40,15 @@ def explore_temporal_shifting_for_workflow(workflow: str, task_extraction_result
     """
     tasks_by_interval = task_extraction_result.tasks_by_interval
     overhead_intervals = task_extraction_result.overhead_intervals
+
+    # Calculate total time of workflow from trace records
+    trace_records = task_extraction_result.trace_records
+    cpu_model = trace_records[0].cpu_model
+    # Check if all trace records have the same CPU model
+    if not all(record.cpu_model == cpu_model for record in trace_records):
+        raise ValueError("All trace records must have the same CPU model for consistent calculations.")
+    if not cpu_model:
+        cpu_model = get_cpu_model(model_name)
 
     # Identify Hours in Order
     intervals_by_key = {}
@@ -90,18 +102,22 @@ def explore_temporal_shifting_for_workflow(workflow: str, task_extraction_result
 
         # Report Overhead of Interrupting Temporal Shifting
         oh_interval_inds = get_intervals(ind)
-        overhead = 0
+        overhead_ms = 0
 
         if len(overhead_intervals) > 0:
             for oh_interval_ind in oh_interval_inds:
-                overhead += overhead_intervals[oh_interval_ind]
+                overhead_ms += overhead_intervals[oh_interval_ind]
 
         saving = ((orig_carbon_emissions - carbon_emissions) / orig_carbon_emissions) * 100
 
-        overhead_s = overhead / 1000
+        overhead_s = overhead_ms / 1000
         overhead_perc = (overhead_s / makespan) * 100
+        
+        total_with_overhead_hrs = (makespan + overhead_s) / 3600  # convert seconds to hours
+        embodied_carbon = calculate_cpu_embodied_carbon(cpu_model, total_with_overhead_hrs)
+        embodied_carbon_orig = calculate_cpu_embodied_carbon(cpu_model, makespan / 3600)
 
-        output.append(f'{saving:.1f}%:{carbon_emissions}:{overhead_s}|{overhead_perc:.1f}%')  # reports overhead in seconds
+        output.append(f'{saving:.1f}%:{carbon_emissions}:{overhead_s}|{overhead_perc:.1f}%|{embodied_carbon:.1f}|{embodied_carbon_orig:.1f}')  # reports overhead in seconds
 
     return ','.join(output)
 
