@@ -7,7 +7,7 @@ apply temporal shifting based on carbon intensity, and generate corresponding re
 from src.models.TraceRecord import TraceRecord
 from src.models.CarbonRecord import CarbonRecord
 from src.models.TaskExtractionResult import TaskExtractionResult
-from src.models.OperationalCarbonResult import OperationalCarbonResult
+from src.models.TempShiftResult import TempShiftResult
 from src.WorkflowNameConstants import *
 from src.Constants import CI, TRACE, PUE, MODEL_NAME, MEMORY_COEFFICIENT, INTERVAL
 from src.utils.TimeUtils import to_timestamp, get_intervals, extract_tasks_by_interval
@@ -21,9 +21,7 @@ import sys
 import numpy as np
 from typing import Dict, List, Tuple, Callable, Union
 
-
-
-def explore_temporal_shifting_for_workflow(workflow: str, task_extraction_result: TaskExtractionResult, ci: Dict[str, float], model_name: str, pue: float, memory_coefficient: float) -> str:
+def explore_temporal_shifting_for_workflow(workflow: str, task_extraction_result: TaskExtractionResult, ci: Dict[str, float], model_name: str, pue: float, memory_coefficient: float) -> TempShiftResult:
     """
     Explore shifting of workflow execution times based on minimum carbon intensity.
 
@@ -67,14 +65,18 @@ def explore_temporal_shifting_for_workflow(workflow: str, task_extraction_result
     orig_carbon_result = calculate_carbon_footprint_ccf(tasks_by_interval, ci, pue, model_name, memory_coefficient, False)
     orig_carbon_emissions = orig_carbon_result.carbon_emissions
 
+
     # Calculate Original Workflow Makespan in seconds
     wf_start = task_extraction_result.workflow_start
     wf_end = task_extraction_result.workflow_end
     makespan = (wf_end - wf_start) / 1000
 
+    embodied_carbon_orig = calculate_cpu_embodied_carbon(cpu_model, makespan / 3600) # Convert makespan to hours for embodied carbon calculation
+    
     # Prepare Script Output
-    output = [workflow, str(orig_carbon_emissions), str(makespan)]
-
+    op_carb_output = [workflow, str(orig_carbon_emissions), str(makespan)]
+    emb_carb_output = [workflow, str(embodied_carbon_orig), str(makespan)]
+    
     # SHIFTING LOGIC
     for shift in [6, 12, 24, 48, 96]:  # flexibility to run over windows 'shift' hours after the workflow executed
         keys = list(intervals_by_key.keys())  # keys that the workflow executes over
@@ -98,7 +100,7 @@ def explore_temporal_shifting_for_workflow(workflow: str, task_extraction_result
 
         # Report Optimal CI Temporal Shifting Carbon Footprint
         shifted_carbon_result = calculate_carbon_footprint_ccf(tasks_by_interval, ci_for_shifted_trace, pue, model_name, memory_coefficient, False)
-        carbon_emissions = shifted_carbon_result.carbon_emissions
+        operational_carbon = shifted_carbon_result.carbon_emissions
 
         # Report Overhead of Interrupting Temporal Shifting
         oh_interval_inds = get_intervals(ind)
@@ -108,19 +110,22 @@ def explore_temporal_shifting_for_workflow(workflow: str, task_extraction_result
             for oh_interval_ind in oh_interval_inds:
                 overhead_ms += overhead_intervals[oh_interval_ind]
 
-        saving = ((orig_carbon_emissions - carbon_emissions) / orig_carbon_emissions) * 100
+        op_saving = ((orig_carbon_emissions - operational_carbon) / orig_carbon_emissions) * 100
 
         overhead_s = overhead_ms / 1000
         overhead_perc = (overhead_s / makespan) * 100
         
         total_with_overhead_hrs = (makespan + overhead_s) / 3600  # convert seconds to hours
         embodied_carbon = calculate_cpu_embodied_carbon(cpu_model, total_with_overhead_hrs)
-        embodied_carbon_orig = calculate_cpu_embodied_carbon(cpu_model, makespan / 3600)
+        emb_saving = ((embodied_carbon_orig - embodied_carbon) / embodied_carbon_orig) * 100
 
-        output.append(f'{saving:.1f}%:{carbon_emissions}:{overhead_s}|{overhead_perc:.1f}%|{embodied_carbon:.1f}|{embodied_carbon_orig:.1f}')  # reports overhead in seconds
+        op_carb_output.append(f'{op_saving:.1f}%:{operational_carbon}:{overhead_s}|{overhead_perc:.1f}%')  # reports overhead in seconds
+        emb_carb_output.append(f'{emb_saving:.1f}%:{embodied_carbon}:{overhead_s}|{overhead_perc:.1f}%')  
 
-    return ','.join(output)
-
+    return TempShiftResult(
+        op_carbon_results=','.join(op_carb_output),
+        emb_carbon_results=','.join(emb_carb_output)
+    )
 
 def main(workflows: List[str], ci: Dict[str, float], arguments: Dict[str, Union[str, float, int]], outfilename: str) -> None:
     """
@@ -142,18 +147,21 @@ def main(workflows: List[str], ci: Dict[str, float], arguments: Dict[str, Union[
     memory_coefficient: float = arguments[MEMORY_COEFFICIENT]
     results = []
 
+    emb_outfilename = outfilename.replace('.csv', '-emb.csv')
+
     for workflow in workflows:
         task_extraction_result = extract_tasks_by_interval(workflow, interval)
 
         result = explore_temporal_shifting_for_workflow(workflow, task_extraction_result, ci, model_name, pue, memory_coefficient)
         results.append(result)
 
-    with open(outfilename, 'w') as f:
-        f.write('workflow,footprint,makespan,flexible-6h,flexible-12h,flexible-24h,flexible-48h,flexible-96h\n')
-
+    with open(outfilename, 'w') as op_file, open(emb_outfilename, 'w') as emb_file:
+        op_file.write('workflow,footprint,makespan,flexible-6h,flexible-12h,flexible-24h,flexible-48h,flexible-96h\n')
+        emb_file.write('workflow,embodied-carbon,makespan,flexible-6h,flexible-12h,flexible-24h,flexible-48h,flexible-96h\n')
+        
         for result in results:
-            f.write(f'{result}\n')
-
+            op_file.write(f'{result.op_carbon_results}\n')
+            emb_file.write(f'{result.emb_carbon_results}\n')
 
 # Main Script
 if __name__ == '__main__':
