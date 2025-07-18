@@ -1,7 +1,9 @@
 # Imports
 from src.scripts.Convertor import convertor
-from src.scripts.CarbonFootprint import get_carbon_footprint
+from src.scripts.IchnosCF import get_carbon_footprint
 from src.utils.Usage import print_usage_exit_Explorer as print_usage_exit
+from typing import List, Tuple, Dict
+from src.models.IchnosResult import IchnosResult
 
 import sys
 import os
@@ -15,29 +17,41 @@ FORWARD = "+"
 BACKWARD = "-"
 TRACE = "trace"
 CI = "ci"
-CONFIG = "config"
 DELIM = "delim"
 DIRECTION = "direction"
 SHIFT = "shift"
 TRACE_FILENAME = "filename"
-MIN_WATTS = "min-watts"
-MAX_WATTS = "max-watts"
+MODEL_NAME = "model-name"
+INTERVAL = "interval"
+PUE = "pue"
+MEMORY_COEFFICIENT = "memory-coeff"
 
 
 # Functions
-def shift_trace(trace, delim, shift=DEFAULT_SHIFT):
+def shift_trace(trace: str, delim: str, shift: str = DEFAULT_SHIFT) -> Tuple[str, str, str]:
+    """
+    Generate shifted trace filenames for both forward and backward directions.
+
+    Args:
+        trace (str): The base trace filename.
+        delim (str): The delimiter to use in the command.
+        shift (str, optional): The shift string (e.g., '00-12-00'). Defaults to DEFAULT_SHIFT.
+
+    Returns:
+        Tuple[str, str, str]: (backward shifted trace, original trace, forward shifted trace)
+    """
     cmd_shift_forward = CMD_SHIFT\
             .replace(TRACE, trace)\
             .replace(DELIM, delim)\
             .replace(DIRECTION, FORWARD)\
             .replace(SHIFT, shift)\
-            .replace(TRACE_FILENAME, f"{trace.split('.')[0]}~{shift}")
+            .replace(TRACE_FILENAME, f"{trace}~+{shift}")
     cmd_shift_backward = CMD_SHIFT\
             .replace(TRACE, trace)\
             .replace(DELIM, delim)\
             .replace(DIRECTION, BACKWARD)\
             .replace(SHIFT, shift)\
-            .replace(TRACE_FILENAME, f"{trace.split('.')[0]}~{shift}")
+            .replace(TRACE_FILENAME, f"{trace}~-{shift}")
 
     trace_forward = convertor(cmd_shift_forward)
     trace_backward = convertor(cmd_shift_backward)
@@ -45,76 +59,164 @@ def shift_trace(trace, delim, shift=DEFAULT_SHIFT):
     return (trace_backward, trace, trace_forward)
 
 
-def calculate_footprint(trace, ci, min_watts, max_watts):
-    command = f"{trace} {ci} {min_watts} {max_watts} 1.0 0.392"
+def calculate_footprint(trace: str, ci: str, model_name: str, interval: int = 60, pue: float = 1.0, memory_coeff: float = 0.392) -> IchnosResult:
+    """
+    Calculate the carbon footprint for a given trace using the IchnosCF pipeline.
+
+    Args:
+        trace (str): The trace filename.
+        ci (str): The carbon intensity file or value.
+        model_name (str): The power model name.
+        interval (int, optional): The interval in minutes. Defaults to 60.
+        pue (float, optional): Power Usage Effectiveness. Defaults to 1.0.
+        memory_coeff (float, optional): Memory power coefficient. Defaults to 0.392.
+
+    Returns:
+        IchnosResult: The result object containing summary and emissions.
+    """
+    command = f"{trace} {ci} {model_name} {interval} {pue} {memory_coeff}"
     return get_carbon_footprint(command)
 
 
-def report_summary(folder, settings, results, shift):
+def report_summary(folder: str, settings: Dict[str, str], results: List[Tuple[str, IchnosResult]]) -> None:
+    """
+    Write summary and emissions reports for a set of traces and their carbon results.
+
+    Args:
+        folder (str): Output folder for reports.
+        settings (Dict[str, str]): Settings dictionary (parsed arguments).
+        results (List[Tuple[str, IchnosResult]]): List of (trace, result) pairs.
+    """
     file_prefix = folder.split("/")[1]
 
     with open(folder + f"/{file_prefix}~summary.txt", "w+") as file:
-        for (trace, (summary, cf)) in results:
-            file.write(f"Trace Report for [{trace}] using CI Data [{settings[CI]}] with Shift [{shift}]\n")
-            file.write(f"{summary}\n\n")
+        for (trace, ichnos_result) in results:
+            trace_parts = trace.split('.')
+            if '~' in trace_parts[0]:
+                file.write(f"Trace Report for [{trace_parts[0]}] using CI Data [{settings[CI]}] with Shift [{trace_parts[0].split('~')[1]}]\n")
+            else:
+                file.write(f"Trace Report for [{trace_parts[0]}] using CI Data [{settings[CI]}] with Shift [0]\n")
+            file.write(f"{ichnos_result.summary}\n\n")
 
     with open(folder + f"/{file_prefix}~footprint.csv", "w+") as file:
-        for (trace, (_, cf)) in results:
-            file.write(f"{trace},{cf}\n")
+        file.write('trace,op_ems,emb_ems\n')
+        for (trace, ichnos_result) in results:
+            file.write(f"{trace.split('.')[0]},{ichnos_result.operational_emissions},{ichnos_result.embodied_emissions}\n")
 
     print(f"[Explorer] Finished - View Results in [{folder}/summary.txt]")
 
 
-def get_output_folder(trace, ci): 
-    trace_name = trace.split(".")[-2]
-    ci_name = ci.split(".")[-2]
+def get_output_folder(shift: int, trace: str, ci: str) -> str:
+    """
+    Construct the output folder path for a given shift, trace, and CI.
 
-    return f"output/explorer-{trace_name}-{ci_name}"
+    Args:
+        shift (int): Number of hours to shift.
+        trace (str): Trace filename.
+        ci (str): Carbon intensity file or value.
+
+    Returns:
+        str: Output folder path.
+    """
+    trace_name = trace
+    ci_name = ci
+    return f"output/explorer-{shift}h-{trace_name}-{ci_name}"
 
 
-def parse_arguments(arguments):
-    if len(arguments) != 6:
+def parse_arguments(arguments: List[str]) -> Dict[str, str]:
+    """
+    Parse command-line arguments for the Explorer script.
+
+    Args:
+        arguments (List[str]): List of command-line arguments.
+
+    Returns:
+        Dict[str, str]: Parsed settings dictionary.
+    """
+    if len(arguments) != 7:
         print_usage_exit()
-
     return {
         TRACE: arguments[0].strip(),
         CI: arguments[1].strip(),
-        CONFIG: arguments[2].strip(),
-        SHIFT: int(arguments[3].strip()),
-        MIN_WATTS: float(arguments[4].strip()),
-        MAX_WATTS: float(arguments[5].strip())
+        SHIFT: int(arguments[2].strip()),
+        MODEL_NAME: arguments[3].strip(),
+        INTERVAL: int(arguments[4].strip()),
+        PUE: float(arguments[5].strip()),
+        MEMORY_COEFFICIENT: float(arguments[6].strip())
     }
 
 
-def shift_trace_both_directions_by_h(trace, delim, shift_by, ci, min_watts, max_watts):
-    backward_traces = []
-    forward_traces = []
+def shift_trace_both_directions_by_h(trace: str, delim: str, shift_by: int, ci: str, model_name: str, interval: int, pue: float, memory_coeff: float) -> List[Tuple[str, IchnosResult]]:
+    """
+    Generate traces shifted both backward and forward by up to shift_by hours, and calculate their footprints.
 
+    Args:
+        trace (str): The base trace filename.
+        delim (str): The delimiter to use in the command.
+        shift_by (int): Number of hours to shift in each direction.
+        ci (str): Carbon intensity file or value.
+        model_name (str): Power model name.
+        interval (int): Interval in minutes.
+        pue (float): Power Usage Effectiveness.
+        memory_coeff (float): Memory power coefficient.
+
+    Returns:
+        List[Tuple[str, IchnosResult]]: List of (trace, result) pairs for all shifts.
+    """
+    backward_traces: List[str] = []
+    forward_traces: List[str] = []
     for i in range(1, shift_by + 1):
         shift = ''
-
         if i >= 24:
             days = i // 24
             hours = i - (24 * days)
             shift = f"{str(days).zfill(2)}-{str(hours).zfill(2)}-00"
         else:
             shift = f"00-{str(i).zfill(2)}-00"
-
         (trace_bwd, _, trace_fwd) = shift_trace(trace, delim, shift)
         backward_traces.insert(0, trace_bwd)
         forward_traces.append(trace_fwd)
-
-    footprints = []
-    ci = ci.split('.')[0]
-
+    footprints: List[Tuple[str, IchnosResult]] = []
     for trace_bwd in backward_traces:
-        footprints.append((trace_bwd, calculate_footprint(trace_bwd, ci, min_watts, max_watts)))
-
-    footprints.append((trace, calculate_footprint(trace, ci, min_watts, max_watts)))
-
+        footprints.append((trace_bwd, calculate_footprint(trace_bwd, ci, model_name, interval, pue, memory_coeff)))
+    footprints.append((trace, calculate_footprint(trace, ci, model_name, interval, pue, memory_coeff)))
     for trace_fwd in forward_traces:
-        footprints.append((trace_fwd, calculate_footprint(trace_fwd, ci, min_watts, max_watts)))
+        footprints.append((trace_fwd, calculate_footprint(trace_fwd, ci, model_name, interval, pue, memory_coeff)))
+    return footprints
 
+
+def shift_trace_forwards_by_h(trace: str, delim: str, shift_by: int, ci: str, model_name: str, interval: int, pue: float, memory_coeff: float) -> List[Tuple[str, IchnosResult]]:
+    """
+    Generate traces shifted forward by up to shift_by hours, and calculate their footprints.
+
+    Args:
+        trace (str): The base trace filename.
+        delim (str): The delimiter to use in the command.
+        shift_by (int): Number of hours to shift forward.
+        ci (str): Carbon intensity file or value.
+        model_name (str): Power model name.
+        interval (int): Interval in minutes.
+        pue (float): Power Usage Effectiveness.
+        memory_coeff (float): Memory power coefficient.
+
+    Returns:
+        List[Tuple[str, IchnosResult]]: List of (trace, result) pairs for all shifts.
+    """
+    forward_traces: List[str] = []
+    for i in range(1, shift_by + 1):
+        shift = ''
+        if i >= 24:
+            days = i // 24
+            hours = i - (24 * days)
+            shift = f"{str(days).zfill(2)}-{str(hours).zfill(2)}-00"
+        else:
+            shift = f"00-{str(i).zfill(2)}-00"
+        (_, _, trace_fwd) = shift_trace(trace, delim, shift)
+        forward_traces.append(trace_fwd)
+    footprints: List[Tuple[str, IchnosResult]] = []
+    footprints.append((trace, calculate_footprint(trace, ci, model_name, interval, pue, memory_coeff)))
+    for trace_fwd in forward_traces:
+        footprints.append((trace_fwd, calculate_footprint(trace_fwd, ci, model_name, interval, pue, memory_coeff)))
     return footprints
 
 
@@ -123,8 +225,8 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     settings = parse_arguments(args)
 
-    output_folder = get_output_folder(settings[TRACE], settings[CI])
+    output_folder = get_output_folder(settings[SHIFT], settings[TRACE], settings[CI])
     os.makedirs(output_folder, exist_ok=True)
 
-    footprints = shift_trace_both_directions_by_h(settings[TRACE], ",", settings[SHIFT], settings[CI], settings[MIN_WATTS], settings[MAX_WATTS])
-    report_summary(output_folder, settings, footprints, "custom")
+    footprints = shift_trace_forwards_by_h(settings[TRACE], ",", settings[SHIFT], settings[CI], settings[MODEL_NAME], settings[INTERVAL], settings[PUE], settings[MEMORY_COEFFICIENT])
+    report_summary(output_folder, settings, footprints)

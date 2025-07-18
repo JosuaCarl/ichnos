@@ -7,8 +7,10 @@ trace files, and for validating input values.
 
 import logging
 from typing import Tuple, List, Dict, Union
+import yaml
 from src.Constants import *
 from src.models.TraceRecord import TraceRecord
+from src.utils.Usage import print_usage_exit_TemporalInterrupt
 
 """
 This parses arguments for the CarbonFootprint script (getting deprecated).
@@ -107,6 +109,70 @@ def parse_arguments(args: List[str]) -> Dict[str, Union[float, int, str]]:
         arguments[NUM_OF_NODES] = int(args[7])
     else:
         arguments[INTERVAL] = 60
+        arguments[PUE] = DEFAULT_PUE_VALUE
+        arguments[MEMORY_COEFFICIENT] = DEFAULT_MEMORY_POWER_DRAW
+
+    return arguments
+
+def parse_arguments_with_config(args: List[str]) -> Dict[str, Union[float, int, str]]:
+    """
+    Parse command-line arguments for IchnosCF/OperationalCarbon, supporting a -c <config.yaml> flag.
+    If -c is present, load arguments from the YAML config file and override with any additional CLI args.
+    """
+    if '-c' in args:
+        c_idx = args.index('-c')
+        if c_idx + 1 >= len(args):
+            raise ValueError('Config file path must follow -c flag')
+        config_path = args[c_idx + 1]
+        with open(config_path, 'r') as f:
+            config_args = yaml.safe_load(f)
+        if config_args is None:
+            config_args = {}
+        # Remove -c and config path from args
+        args = args[:c_idx] + args[c_idx+2:]
+        # If any args remain, treat them as positional overrides (trace, ci, model, ...)
+        positional_keys = [TRACE, CI, MODEL_NAME, INTERVAL, PUE, MEMORY_COEFFICIENT, RESERVED_MEMORY, NUM_OF_NODES]
+        for i, val in enumerate(args):
+            if i < len(positional_keys):
+                config_args[positional_keys[i]] = val
+        config_args = _set_defaults_for_missing_args(config_args)
+        return config_args
+    else:
+        return parse_arguments(args)
+
+"""
+This parses arguments for the TemporalInterrupt script.
+"""
+def parse_arguments_TemporalInterrupt(args: List[str]) -> Dict[str, Union[float, int, str]]:
+    """
+    Parse command-line arguments for the TemporalInterrupt script.
+
+    Expected arguments:
+      - [0]: workflow file name
+      - [1]: carbon intensity value or file name
+      - [2]: power model name
+      Optionally:
+      - [3]: interval (int)
+      - Given 6 arguments, [4] is PUE and [5] is memory coefficient.
+      Defaults are used when only 3 arguments are provided.
+    
+    :param args: List of argument strings.
+    :return: Dictionary mapping argument names to their parsed values.
+    """
+    if len(args) != 3 and len(args) != 6:
+        print_usage_exit_TemporalInterrupt()
+
+    arguments: Dict[str, Union[float, int, str]] = {}
+    arguments[TRACE] = args[0]
+    arguments[CI] = args[1]
+    arguments[MODEL_NAME] = args[2]
+    
+    if len(args) == 6:
+        arguments[INTERVAL] = int(args[3])
+        arguments[PUE] = float(args[4])
+        arguments[MEMORY_COEFFICIENT] = float(args[5])
+    else: 
+        arguments[INTERVAL] = DEFAULT_INTERVAL_VALUE
         arguments[PUE] = DEFAULT_PUE_VALUE
         arguments[MEMORY_COEFFICIENT] = DEFAULT_MEMORY_POWER_DRAW
 
@@ -217,3 +283,16 @@ def _check_if_float(value: str) -> bool:
     :return: True if the string represents a float, otherwise False.
     """
     return value.replace('.', '').isnumeric()
+
+def _set_defaults_for_missing_args(args_dict: Dict[str, Union[float, int, str]]) -> Dict[str, Union[float, int, str]]:
+    """
+    Set default values for optional arguments if they are missing from the config dict.
+    """
+    if INTERVAL not in args_dict:
+        args_dict[INTERVAL] = 60
+    if PUE not in args_dict:
+        args_dict[PUE] = DEFAULT_PUE_VALUE
+    if MEMORY_COEFFICIENT not in args_dict:
+        args_dict[MEMORY_COEFFICIENT] = DEFAULT_MEMORY_POWER_DRAW
+    return args_dict
+

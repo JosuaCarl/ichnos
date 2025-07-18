@@ -11,3 +11,11 @@ output/
 
 data/trace
 !data/trace/test.csv
+
+data/intensity
+!data/intensity/ci.csv
+
+# Evaluation scripts
+eval_scripts/
+
+.DS_Store

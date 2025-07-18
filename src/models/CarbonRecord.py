@@ -5,7 +5,7 @@ carbon emissions, and performance metrics for a given computational task.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Optional
 
 HEADERS = "name,id,co2e,energy,avg_ci,realtime,cpu_model,cpu_count,cpu_powerdraw,cpu_usage,memory,memory_powerdraw"
 
@@ -17,10 +17,10 @@ class CarbonRecord:
     Attributes:
         energy (Optional[float]): Energy consumption.
         co2e (Optional[float]): Carbon emissions.
-        id (Any): Identifier for the record.
+        id (str): Identifier for the record.
         realtime (float): Real time duration.
-        start (Optional[Any]): Start time of the task.
-        complete (Optional[Any]): Completion time of the task.
+        start (Optional[int]): Start time of the task.
+        complete (Optional[int]): Completion time of the task.
         core_count (int): Number of CPU cores used.
         cpu_powerdraw (Optional[float]): CPU power draw metric.
         cpu_usage (float): CPU usage percentage.
@@ -32,10 +32,10 @@ class CarbonRecord:
     """
     energy: Optional[float]
     co2e: Optional[float]
-    id: Any
+    id: str
     realtime: float
-    start: Optional[Any] = None
-    complete: Optional[Any] = None
+    start: Optional[int] = None
+    complete: Optional[int] = None
     core_count: int = 0
     cpu_powerdraw: Optional[float] = None
     cpu_usage: float = 0.0

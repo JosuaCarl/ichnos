@@ -121,37 +121,37 @@ def write_task_trace_and_rank_report(folder: str, trace_file: str, records: Iter
     except Exception as e:
         logging.error("Error writing trace file for task rank report: %s", e)
         raise
-    sorted_records = sorted(records, key=lambda r: (-r.co2e, -r.energy, -r.realtime))
-    sorted_records_par = sorted(records, key=lambda r: (-r.energy, -r.realtime))
-    try:
-        with open(output_file_name, "w") as report_file:
-            with open(technical_output_file_name, "w") as task_rank_file:
-                report_file.write(f'Detailed Report for {trace_file}\n')
-                task_rank_file.write(f'{HEADERS}\nBREAK\n')
-                report_file.write('\nTop 10 Tasks - ranked by footprint, energy and realtime:\n')
-                task_rank_file.write('TOP|FOOTPRINT-ENERGY-REALTIME\n')
-                report_file.write(f'\n{HEADERS}\n')
-                for record in sorted_records[:10]:
-                    report_file.write(f"{record}\n")
-                    task_rank_file.write(f"{record}\n")
-                task_rank_file.write('BREAK\n')
-                report_file.write('\nTop 10 Tasks - ranked by energy and realtime:\n')
-                report_file.write(f'\n{HEADERS}\n')
-                task_rank_file.write('TOP|ENERGY-REALTIME\n')
-                for record in sorted_records[:10]:
-                    report_file.write(f"{record}\n")
-                    task_rank_file.write(f"{record}\n")
-                diff = set(sorted_records[:10]).difference(set(sorted_records_par[:10]))
-                if len(diff) == 0:
-                    report_file.write('\nThe top 10 tasks with the largest energy and realtime have the largest footprint.\n')
-                    task_rank_file.write('BREAK\nSAME\nEND\n')
-                else:
-                    report_file.write('\nThe following tasks have one of the top 10 largest footprints, but not the highest energy or realtime...\n')
-                    report_file.write(', '.join([str(task) for task in diff]))
-                    task_rank_file.write('BREAK\nDIFF\nEND\n')
-    except Exception as e:
-        logging.error("Failed to write task trace and rank report files: %s", e)
-        raise
+    # sorted_records = sorted(records, key=lambda r: (-r.co2e, -r.energy, -r.realtime))
+    # sorted_records_par = sorted(records, key=lambda r: (-r.energy, -r.realtime))
+    # try:
+    #     with open(output_file_name, "w") as report_file:
+    #         with open(technical_output_file_name, "w") as task_rank_file:
+    #             report_file.write(f'Detailed Report for {trace_file}\n')
+    #             task_rank_file.write(f'{HEADERS}\nBREAK\n')
+    #             report_file.write('\nTop 10 Tasks - ranked by footprint, energy and realtime:\n')
+    #             task_rank_file.write('TOP|FOOTPRINT-ENERGY-REALTIME\n')
+    #             report_file.write(f'\n{HEADERS}\n')
+    #             for record in sorted_records[:10]:
+    #                 report_file.write(f"{record}\n")
+    #                 task_rank_file.write(f"{record}\n")
+    #             task_rank_file.write('BREAK\n')
+    #             report_file.write('\nTop 10 Tasks - ranked by energy and realtime:\n')
+    #             report_file.write(f'\n{HEADERS}\n')
+    #             task_rank_file.write('TOP|ENERGY-REALTIME\n')
+    #             for record in sorted_records[:10]:
+    #                 report_file.write(f"{record}\n")
+    #                 task_rank_file.write(f"{record}\n")
+    #             diff = set(sorted_records[:10]).difference(set(sorted_records_par[:10]))
+    #             if len(diff) == 0:
+    #                 report_file.write('\nThe top 10 tasks with the largest energy and realtime have the largest footprint.\n')
+    #                 task_rank_file.write('BREAK\nSAME\nEND\n')
+    #             else:
+    #                 report_file.write('\nThe following tasks have one of the top 10 largest footprints, but not the highest energy or realtime...\n')
+    #                 report_file.write(', '.join([str(task) for task in diff]))
+    #                 task_rank_file.write('BREAK\nDIFF\nEND\n')
+    # except Exception as e:
+    #     logging.error("Failed to write task trace and rank report files: %s", e)
+    #     raise
 
 ##################################
 # MARK: Private Functions
