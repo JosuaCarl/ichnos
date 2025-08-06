@@ -30,7 +30,7 @@ westkath@misool:~/code/carbon-footprint$ python3 -m src.scripts.Convertor nf-ran
 
 If you use Ichnos in your research, please cite our paper:
 
-Kathleen West, Yehia Elkhatib and Lauritz Thamsen. "[Ichnos: A Carbon Footprint Estimator for Scientific Workflows](https://arxiv.org/abs/2411.12456)" Extended Abstract for *1st International Workshop on Low Carbon Computing (LOCO24)*. 2024
+Kathleen West, Magnus Reid, Yehia Elkhatib and Lauritz Thamsen. "[Ichnos: A Carbon Footprint Estimator for Scientific Workflows](https://arxiv.org/abs/2411.12456)" Full Workshop Paper for *1st International Workshop on Low Carbon Computing (LOCO24)*. 2024
 
 Bibtex:
 ```
@@ -59,3 +59,4 @@ Results and evaluation repository is available [ichnos-results-evaluation](https
   > Nature Biotechnology, vol. 35, no. 4, pp. 316–319, Apr. 2017, https://doi.org/10.1038/nbt.3820
 - [Carbon Footprint](src/scripts/CarbonFootprint.py) also features an adaptation of the calculation for variable compute energy usage from the [Cloud Carbon Footprint Methodology](https://www.cloudcarbonfootprint.org/docs/methodology/).
 - [Electricity Maps (2025)](https://www.electricitymaps.com). 2023/4 Hourly Carbon Intensity Data (Version January 27, 2025). Electricity Maps. 
+
