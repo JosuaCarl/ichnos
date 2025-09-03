@@ -1,7 +1,14 @@
 # Carbon-Footprint
 A project with scripts to methodically calculate the Carbon Footprint of Workflow Executions from Nextflow trace files.
 
-# Usage
+## Dependencies
+You can install the necessary dependencies with:
+```bash
+uv sync
+```
+After that you can also run each command without `uv run`, provided you did not activate another environment. You can activate it via `source .venv/bin/activate`.
+
+## Usage
 For the current version, replicating the previous calculation approach noted in the Credits section, example usage has been provided with default values:
 ```bash
 uv run python -m src.scripts.IchnosCF <trace-name> <ci-value|ci-file-name> <power_model> <? interval=60> <? pue=1.0> <? memory-coeff=0.392>
@@ -18,16 +25,16 @@ uv run python -m src.scripts.IchnosCF -c <path/to/your/config.yaml>
 > **Note**  
 > The trace file must use raw data values, e.g. duration recorded in ms, this is possible by using the trace.raw flag when executing a nextflow workflow. 
 
-# Output
+## Output
 The script will produce two files. If the trace file name was 'test', then 'test-trace.csv' would produce a csv file of Carbon Records with energy consumption (inc. PUE) and carbon footprint for each task in the trace file. The 'test-summary.txt' file will contain details around the provided parameters (e.g. CI, PUE) and the overall energy, memory and carbon footprint.     
 See the [test-summary](output/test-summary.txt) and [test-trace](output/test-trace.csv). 
 
-# Extras
+## Extras
 Using the [convertor](src/scripts/Convertor.py) we can create updated trace files with an updated timestamp (only altering for the same day by a number of hours and minutes at present) to show how Carbon Intensity affects the Carbon Footprint over a day (or some given period in the future).   
 See example output:
-```
-westkath@misool:~/code/carbon-footprint$ python3 -m src.scripts.Convertor nf-rangeland-21-1.txt - 6 0 \;
-westkath@misool:~/code/carbon-footprint$ python3 -m src.scripts.Convertor nf-rangeland-21-1.txt + 6 0 \;
+```bash
+uv run python3 -m src.scripts.Convertor nf-rangeland-21-1.txt - 6 0 \;
+uv run python3 -m src.scripts.Convertor nf-rangeland-21-1.txt + 6 0 \;
 ```
 
 ## 📖 Publications
