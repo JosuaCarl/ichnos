@@ -1,0 +1,14 @@
+workflow-name: "ampliseq"
+trace-file: "example/execution_trace_2025-08-29_09-19-35.txt"
+trace-delimiter: "\t"
+
+node-config-file: "example/node_config.json"
+model-name: "thanos_default_quadratic"
+
+ci: 100.0
+interval: 60
+pue: 1.0
+
+memory-coefficient: 0.392
+reserved-memory: True
+num-of-nodes: 1

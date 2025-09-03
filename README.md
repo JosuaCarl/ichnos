@@ -3,10 +3,14 @@ A project with scripts to methodically calculate the Carbon Footprint of Workflo
 
 # Usage
 For the current version, replicating the previous calculation approach noted in the Credits section, example usage has been provided with default values:
+```bash
+uv run python -m src.scripts.IchnosCF <trace-name> <ci-value|ci-file-name> <power_model> <? interval=60> <? pue=1.0> <? memory-coeff=0.392>
+uv run python -m src.scripts.IchnosCF ampliseq-1 uk-marg-010125-110225 gpg_15_powersave_linear 5 1.0 0.392
 ```
-$ python -m src.scripts.IchnosCF <trace-name> <ci-value|ci-file-name> <power_model> <? interval=60> <? pue=1.0> <? memory-coeff=0.392>
-$ python3 -m src.scripts.IchnosCF ampliseq-1 uk-marg-010125-110225 gpg_15_powersave_linear 5 1.0 0.392
-```      
+or with a configuration file, like [config.yaml](example/config.yaml):
+```bash
+uv run python -m src.scripts.IchnosCF -c <path/to/your/config.yaml>
+```
 
 > **Note**  
 > The trace file name must be the file name only, and traces should be csv files stored in the [data trace](data/trace/) directory!

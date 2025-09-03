@@ -71,7 +71,7 @@ def main(arguments: Dict[str, Any]) -> IchnosResult:
     check_node_memory: bool = RESERVED_MEMORY in arguments
 
     # Calculate carbon emissions (operational & embodied) & save results
-    op_carbon_result: OperationalCarbonResult = calculate_carbon_footprint_ccf(tasks_by_interval, ci_map if ci_map else ci, pue, model_name, memory_coefficient, check_node_memory)
+    op_carbon_result: OperationalCarbonResult = calculate_carbon_footprint_ccf(tasks_by_interval, ci_map if ci_map else ci, pue, model_name, memory_coefficient, check_node_memory, node_config_file)
     result_attributes = ["cpu_energy", "cpu_energy_pue", "memory_energy", "memory_energy_pue", "carbon_emissions", "node_memory_usage", "records"]
     cpu_energy, cpu_energy_pue, mem_energy, mem_energy_pue, op_carbon_emissions, node_memory_usage, records_res = [getattr(op_carbon_result, attribute) for attribute in result_attributes]
 
