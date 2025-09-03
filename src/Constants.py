@@ -29,6 +29,8 @@ NUM_OF_NODES = "num-of-nodes"
 TASK_FLAG = True
 MODEL_NAME = 'model-name' 
 
+OUT_FOLDER = "out-folder"
+
 # FetchCarbonIntensity Constants
 NG_BASE_URL = "https://api.carbonintensity.org.uk/"
 NG_ENDPOINT_INTENSITY = "intensity"

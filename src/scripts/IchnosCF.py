@@ -1,12 +1,11 @@
 import datetime
-import os
 import logging
 from typing import Dict, List, Any
 from src.utils.TimeUtils import extract_tasks_by_interval
 from src.utils.Parsers import parse_ci_intervals, parse_arguments_with_config, parse_trace_file
 from src.utils.FileWriters import write_summary_file, write_task_trace_and_rank_report
 from src.utils.NodeConfigModelReader import get_cpu_model
-from src.Constants import DELIMITER, WORKFLOW_NAME, TRACE_FILE, TRACE_DELIMITER, PUE, INTERVAL, MODEL_NAME, MEMORY_COEFFICIENT, FILE, DEFAULT_MEMORY_POWER_DRAW, RESERVED_MEMORY, NUM_OF_NODES, CI, CI_FILE, CI_DELIMITER, NODE_CONFIG_FILE
+from src.Constants import DELIMITER, WORKFLOW_NAME, TRACE_FILE, TRACE_DELIMITER, PUE, INTERVAL, MODEL_NAME, MEMORY_COEFFICIENT, DEFAULT_MEMORY_POWER_DRAW, RESERVED_MEMORY, NUM_OF_NODES, CI, CI_FILE, CI_DELIMITER, NODE_CONFIG_FILE, OUT_FOLDER
 from src.scripts.OperationalCarbon import calculate_carbon_footprint_ccf
 from src.scripts.EmbodiedCarbon import embodied_carbon_for_trace_records
 from src.models.IchnosResult import IchnosResult
@@ -26,9 +25,10 @@ def main(arguments: Dict[str, Any]) -> IchnosResult:
     # Data
     # Check for required entries
     assert WORKFLOW_NAME in arguments and TRACE_FILE in arguments and (CI in arguments or CI_FILE in arguments)
+
     # Define trace file
     workflow_name: str = arguments[WORKFLOW_NAME]
-    trace_file: str = arguments.get(TRACE_FILE, os.path.join("data", "intensity", f"{workflow_name}.{FILE}"))
+    trace_file: str = arguments[TRACE_FILE]
     trace_delimiter:str = arguments.get(TRACE_DELIMITER, DELIMITER)
 
     # Define Carbon intensity
@@ -38,11 +38,13 @@ def main(arguments: Dict[str, Any]) -> IchnosResult:
     ci_map: Dict[str, float]|None = parse_ci_intervals(ci_file, ci_delimiter) if ci_file else None
 
     # Define other calculation parameters
-    node_config_file = arguments.get(NODE_CONFIG_FILE, os.path.join("node_config_models", "node.json"))
+    node_config_file: str = arguments[NODE_CONFIG_FILE]
     pue: float = arguments[PUE]
     interval: int = arguments[INTERVAL]
     model_name: str = arguments[MODEL_NAME]
     memory_coefficient: float = arguments.get(MEMORY_COEFFICIENT, DEFAULT_MEMORY_POWER_DRAW)
+
+    out_folder = arguments.get(OUT_FOLDER, "output")
     
     ## Get raw TraceRecords for computing embodied carbon
     try:
@@ -107,17 +109,13 @@ def main(arguments: Dict[str, Any]) -> IchnosResult:
         res_report: str = f"Reserved Memory Energy Consumption: {total_res_mem_energy}kWh"
         res_ems_report: str = f"Reserved Memory Carbon Emissions: {total_res_mem_emissions}gCO2e"
         energy_split_report: str = f"% CPU [{((cpu_energy / total_energy) * 100):.2f}%] | % Memory [{(((total_res_mem_energy + mem_energy) / total_energy) * 100):.2f}%]"
-        summary += f"""
-        {res_report}
-        {res_ems_report}
-        {energy_split_report}
-        """
+        summary += "\n".join([res_report, res_ems_report, energy_split_report, ""])
         print(res_report)
         print(energy_split_report)
 
     # Report Summary
-    write_summary_file("output", f"{workflow_name}-{model_name}", summary)
-    write_task_trace_and_rank_report("output", f"{workflow_name}-{model_name}", records_res)
+    write_summary_file(out_folder, f"{workflow_name}-{model_name}", summary)
+    write_task_trace_and_rank_report(out_folder, f"{workflow_name}-{model_name}", records_res)
 
     return IchnosResult(
         summary=summary,

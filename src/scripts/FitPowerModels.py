@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import sys
 
@@ -80,8 +81,8 @@ def make_model(filename):
 
     return (model_linear_v2, mem_draw, (min(y_arr), max(y_arr)))
 
-def write_output(filename, model, mem_draw, minmax, mem):
-    filename = f'output/{filename}-model.txt'
+def write_output(filename, model, mem_draw, minmax, mem, out_folder: str = "output"):
+    filename = os.path.join(out_folder, f"{filename}-model.txt")
     (miiin, maaax) = minmax
 
     with open(filename, 'w') as f:
