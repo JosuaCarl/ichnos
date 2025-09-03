@@ -20,10 +20,14 @@ uv run python -m src.scripts.IchnosCF -c <path/to/your/config.yaml>
 ```
 
 > **Note**  
-> The trace file name must be the file name only, and traces should be csv files stored in the [data trace](data/trace/) directory!
-
-> **Note**  
-> The trace file must use raw data values, e.g. duration recorded in ms, this is possible by using the trace.raw flag when executing a nextflow workflow. 
+> The trace file must use raw data values (e.g. duration recorded in ms). Please set `trace.raw = true` in your `nextflow.config`. In addition to the standard fields, `start`, `complete`, `cpus`, `memory`, `process` must be added to the trace file.
+> Example entry in `nextflow.config`: 
+> ```config
+>  trace {
+>      raw = true
+>      fields = ['task_id', 'hash', 'native_id', 'name', 'status', 'exit', 'submit', 'duration', 'realtime', '%cpu', 'peak_rss', 'peak_vmem', 'rchar', 'wchar', 'start', 'complete', 'cpus', 'memory', 'process']
+>  }
+> ```
 
 ## Output
 The script will produce two files. If the trace file name was 'test', then 'test-trace.csv' would produce a csv file of Carbon Records with energy consumption (inc. PUE) and carbon footprint for each task in the trace file. The 'test-summary.txt' file will contain details around the provided parameters (e.g. CI, PUE) and the overall energy, memory and carbon footprint.     
