@@ -1,7 +1,8 @@
 import json
+import os
 from src.Constants import DEFAULT_MEMORY_POWER_DRAW
 
-def get_cpu_model(model_name: str) -> str:
+def get_cpu_model(model_name: str, node_config_file: str = os.path.join("node_config_models", "nodes.json")) -> str:
 	"""
 	Retrieves the CPU model from the node configuration model name.
 	
@@ -12,7 +13,7 @@ def get_cpu_model(model_name: str) -> str:
 		str: The CPU model extracted from the node configuration model name.
 	"""
  
-	with open('node_config_models/nodes.json') as nodes_json_data:
+	with open(node_config_file) as nodes_json_data:
 		models = json.load(nodes_json_data)
 
 		# Get the model data
@@ -22,9 +23,9 @@ def get_cpu_model(model_name: str) -> str:
   
 		return models[node_id][governor]['cpu_model']
 
-def get_memory_draw(model_name: str) -> float:
+def get_memory_draw(model_name: str, node_config_file: str = os.path.join("node_config_models", "nodes.json")) -> float:
     try:
-        with open('node_config_models/nodes.json') as nodes_json_data:
+        with open(node_config_file) as nodes_json_data:
             models = json.load(nodes_json_data)
 
             # Get the model data
@@ -36,8 +37,8 @@ def get_memory_draw(model_name: str) -> float:
     except:
         return DEFAULT_MEMORY_POWER_DRAW
 
-def get_system_cores(model_name: str) -> int:
-    with open('node_config_models/nodes.json') as nodes_json_data:
+def get_system_cores(model_name: str, node_config_file: str = os.path.join("node_config_models", "nodes.json")) -> int:
+    with open(node_config_file) as nodes_json_data:
         models = json.load(nodes_json_data)
 
         # Get the model data

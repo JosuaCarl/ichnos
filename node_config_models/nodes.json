@@ -4,7 +4,8 @@
 			"tdp_per_core": 7.8,
 			"system_cores": 64,
 			"mem_draw": 0.392,
-			"linear": [-0.02332, 4.42125, 51.32497],
+			"linear": [4.42125, 51.32497],
+			"quadratic": [-0.02332, 4.42125, 51.32497],
 			"cpu_model": "AMD Ryzen Threadripper 2990WX 32-Core Processor"
 		}
 	}

@@ -3,11 +3,15 @@ DEFAULT = "default"
 FILE = "csv"
 DELIMITER = ","
 WORKFLOW_NAME = "workflow-name"
+
 TRACE_FILE = "trace-file"
 TRACE_DELIMITER = "trace-delimiter"
+
 CI = "ci"
 CI_FILE = "ci-file"
 CI_DELIMITER = "ci-delimiter"
+
+NODE_CONFIG_FILE = "node-config-file"
 PUE = "pue"
 INTERVAL = "interval"
 CORE_POWER_DRAW = "core-power-draw"

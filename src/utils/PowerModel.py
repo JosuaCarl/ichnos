@@ -1,9 +1,9 @@
+import os
 from typing import Any
 import json
 import src.utils.MathModels as MathModels
-from src.Constants import DEFAULT_MEMORY_POWER_DRAW
 
-def get_power_model(model_name: str) -> Any:
+def get_power_model(model_name: str, node_config_file: str = os.path.join("node_config_models", "nodes.json")) -> Any:
     """
     Return a power model function requested based on stored configuration data
     The model name is formatted, split by underscores, in the pattern of 'node id', 
@@ -12,7 +12,7 @@ def get_power_model(model_name: str) -> Any:
     """
     print(f'Model Name Provided: {model_name}')
 
-    with open('node_config_models/nodes.json') as nodes_json_data:
+    with open(node_config_file) as nodes_json_data:
         models = json.load(nodes_json_data)
         
         # Get the model data
@@ -27,7 +27,7 @@ def get_power_model(model_name: str) -> Any:
             return MathModels.min_max_linear_power_model(min_watts, max_watts)
         elif model_type == 'baseline':
             tdp_per_core = models[node_id][governor]['tdp_per_core']
-            return MathModels.baseline_power_model(tdp_per_core)
+            return MathModels.baseline_linear_power_model(tdp_per_core)
         elif model_type == 'linear':
             linear_vals = models[node_id][governor]['linear']
             coeff = linear_vals[0]

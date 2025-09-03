@@ -1,3 +1,4 @@
+import os
 from typing import Callable, Dict, List, Tuple, Union
 from src.models.CarbonRecord import CarbonRecord
 from src.models.TaskEnergyResult import TaskEnergyResult
@@ -46,7 +47,7 @@ def estimate_task_energy_consumption_ccf(task: CarbonRecord, model: Callable[[fl
 
 
 # Estimate Carbon Footprint 
-def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[datetime, List[CarbonRecord]], ci: Union[float, Dict[str, float]], pue: float, model_name: str, memory_coefficient: float, check_node_memory: bool = False) -> OperationalCarbonResult:
+def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[datetime, List[CarbonRecord]], ci: Union[float, Dict[str, float]], pue: float, model_name: str, memory_coefficient: float, check_node_memory: bool = False, node_config_file: str = os.path.join("node_config_models", "nodes.json")) -> OperationalCarbonResult:
     """
     Calculate the carbon footprint using the CCF methodology.
     
@@ -65,9 +66,9 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[datetime, Lis
     total_carbon_emissions: float = 0.0
     records: List[CarbonRecord] = []
     node_memory_used: List[Tuple[float, float]] = []
-    power_model = get_power_model(model_name)
-    system_cores = get_system_cores(model_name)
-    memory_coefficient = get_memory_draw(model_name)
+    power_model = get_power_model(model_name, node_config_file)
+    system_cores = get_system_cores(model_name, node_config_file)
+    memory_coefficient = get_memory_draw(model_name, node_config_file)
 
     for group_interval, tasks in tasks_grouped_by_interval.items():
         if tasks:

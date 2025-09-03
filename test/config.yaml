@@ -6,4 +6,7 @@ power_model: "/Users/josuacarl/Codespace/ichnos/test/powerModelThanos.txt"
 interval: 60
 pue: 1.0
 memory-coefficient: 0.392
-model-name: "thanos_default_linear"
+model-name: "thanos_default_quadratic"
+node-config-file: "/Users/josuacarl/EnergyMeasurements/measurements/thanos/node_config_ichnos.json"
+reserved-memory: True
+num-of-nodes: 1
