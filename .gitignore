@@ -18,4 +18,9 @@ data/intensity
 # Evaluation scripts
 eval_scripts/
 
+# MacOS
 .DS_Store
+
+# uv
+uv.lock
+.venv/
