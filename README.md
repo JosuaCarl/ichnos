@@ -19,7 +19,7 @@ or with a configuration file, like [config.yaml](example/config.yaml):
 uv run python -m src.scripts.IchnosCF -c <path/to/your/config.yaml>
 ```
 
-> [!Note]  
+> [!IMPORTANT]  
 > The trace file must use raw data values (e.g. duration recorded in ms). Please set `trace.raw = true` in your `nextflow.config`. In addition to the standard fields, `start`, `complete`, `cpus`, `memory`, `process` must be added to the trace file.
 >
 > Example entry in `nextflow.config`: 
