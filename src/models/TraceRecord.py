@@ -3,7 +3,6 @@ Module: TraceRecord
 This module defines the TraceRecord class for parsing raw trace data and 
 creating corresponding CarbonRecord instances.
 """
-
 from src.models.CarbonRecord import CarbonRecord
 
 class TraceRecord:
@@ -59,7 +58,7 @@ class TraceRecord:
                 value = None if value == '-' else float(value)
             raw[field] = value
         # where memory is not set, use rss
-        if raw['memory'] is None and 'rss' in raw:
+        if raw.get('memory') is None and 'rss' in raw:
             raw['memory'] = raw['rss']
         return raw 
 

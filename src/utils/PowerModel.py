@@ -14,7 +14,7 @@ def get_power_model(model_name: str) -> Any:
 
     with open('node_config_models/nodes.json') as nodes_json_data:
         models = json.load(nodes_json_data)
-
+        
         # Get the model data
         model_data = model_name.split('_')
         node_id: str = model_data[0]

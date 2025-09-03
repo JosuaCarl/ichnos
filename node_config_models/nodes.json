@@ -1,13 +1,11 @@
 {
-	"test": {
+	"thanos": {
 		"default": {
-			"tdp_per_core": 10.0,
-			"system_cores": 8,
+			"tdp_per_core": 7.8,
+			"system_cores": 64,
 			"mem_draw": 0.392,
-			"linear": [ 0.5711151515151512, 54.82666666666669 ],
-			"min_watts": 20.0,
-			"max_watts": 100.0,
-			"cpu_model": "Test Model"
+			"linear": [-0.02332, 4.42125, 51.32497],
+			"cpu_model": "AMD Ryzen Threadripper 2990WX 32-Core Processor"
 		}
 	}
 }

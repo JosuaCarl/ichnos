@@ -9,7 +9,7 @@ from src.models.CarbonRecord import CarbonRecord
 from src.models.TaskExtractionResult import TaskExtractionResult
 from src.models.TempShiftResult import TempShiftResult
 from src.WorkflowNameConstants import *
-from src.Constants import CI, TRACE, PUE, MODEL_NAME, MEMORY_COEFFICIENT, INTERVAL
+from src.Constants import CI, WORKFLOW_NAME, PUE, MODEL_NAME, MEMORY_COEFFICIENT, INTERVAL
 from src.utils.TimeUtils import to_timestamp, get_intervals, extract_tasks_by_interval
 from src.scripts.OperationalCarbon import calculate_carbon_footprint_ccf
 from src.scripts.EmbodiedCarbon import calculate_cpu_embodied_carbon
@@ -167,7 +167,7 @@ def main(workflows: List[str], ci: Dict[str, float], arguments: Dict[str, Union[
 if __name__ == '__main__':
     arguments = sys.argv[1:]
     settings = parse_arguments_TemporalInterrupt(arguments)
-    workflow = settings[TRACE]
+    workflow = settings[WORKFLOW_NAME]
     ci_source_file = f"data/intensity/{settings[CI]}.csv"
     ci = parse_ci_intervals(ci_source_file)
 

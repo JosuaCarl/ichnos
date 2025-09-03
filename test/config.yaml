@@ -1,0 +1,9 @@
+workflow-name: "ampliseq"
+trace-file: "/Users/josuacarl/EnergyMeasurements/measurements/thanos/ampliseq/execution_trace_2025-08-29_09-19-35.txt"
+trace-delimiter: "\t"
+ci: 10.0
+power_model: "/Users/josuacarl/Codespace/ichnos/test/powerModelThanos.txt"
+interval: 60
+pue: 1.0
+memory-coefficient: 0.392
+model-name: "thanos_default_linear"

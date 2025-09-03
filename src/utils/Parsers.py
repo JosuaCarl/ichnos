@@ -36,7 +36,7 @@ def parse_arguments_CarbonFootprint(args: List[str]) -> Dict[str, Union[float, i
         _print_usage_exit_CarbonFootprint()
 
     arguments: Dict[str, Union[float, int, str]] = {}
-    arguments[TRACE] = args[0]
+    arguments[WORKFLOW_NAME] = args[0]
     
     if _check_if_float(args[1]):
         arguments[CI] = float(args[1])
@@ -84,7 +84,7 @@ def parse_arguments(args: List[str]) -> Dict[str, Union[float, int, str]]:
         _print_usage_exit_IchnosCF()
 
     arguments: Dict[str, Union[float, int, str]] = {}
-    arguments[TRACE] = args[0]
+    arguments[WORKFLOW_NAME] = args[0]
     
     if _check_if_float(args[1]):
         arguments[CI] = float(args[1])
@@ -131,7 +131,7 @@ def parse_arguments_with_config(args: List[str]) -> Dict[str, Union[float, int, 
         # Remove -c and config path from args
         args = args[:c_idx] + args[c_idx+2:]
         # If any args remain, treat them as positional overrides (trace, ci, model, ...)
-        positional_keys = [TRACE, CI, MODEL_NAME, INTERVAL, PUE, MEMORY_COEFFICIENT, RESERVED_MEMORY, NUM_OF_NODES]
+        positional_keys = [WORKFLOW_NAME, CI, MODEL_NAME, INTERVAL, PUE, MEMORY_COEFFICIENT, RESERVED_MEMORY, NUM_OF_NODES]
         for i, val in enumerate(args):
             if i < len(positional_keys):
                 config_args[positional_keys[i]] = val
@@ -163,7 +163,7 @@ def parse_arguments_TemporalInterrupt(args: List[str]) -> Dict[str, Union[float,
         print_usage_exit_TemporalInterrupt()
 
     arguments: Dict[str, Union[float, int, str]] = {}
-    arguments[TRACE] = args[0]
+    arguments[WORKFLOW_NAME] = args[0]
     arguments[CI] = args[1]
     arguments[MODEL_NAME] = args[2]
     
@@ -178,7 +178,7 @@ def parse_arguments_TemporalInterrupt(args: List[str]) -> Dict[str, Union[float,
 
     return arguments
 
-def parse_ci_intervals(filename: str) -> Dict[str, float]:
+def parse_ci_intervals(filename: str, delimiter:str = DELIMITER) -> Dict[str, float]:
     """
     Parse a carbon intensity intervals file.
     
@@ -194,7 +194,7 @@ def parse_ci_intervals(filename: str) -> Dict[str, float]:
     ci_map: Dict[str, float] = {}
 
     for row in data:
-        parts = row.split(",")
+        parts = row.split(delimiter)
         date = parts[date_i]
         month_day = '/'.join([val.zfill(2) for val in date.split('-')[-2:]])
         key = month_day + '-' + parts[start_i]
@@ -208,7 +208,7 @@ def parse_ci_intervals(filename: str) -> Dict[str, float]:
     return ci_map
 
 
-def parse_trace_file(filepath: str) -> List[TraceRecord]:
+def parse_trace_file(filepath: str, delimiter: str = DELIMITER) -> List[TraceRecord]:
     """
     Parse a trace file into a list of TraceRecord objects.
     
@@ -225,17 +225,18 @@ def parse_trace_file(filepath: str) -> List[TraceRecord]:
     records: List[TraceRecord] = []
     for line in lines[1:]:
         try:
-            trace_record = TraceRecord(header, line, DELIMITER)
+            trace_record = TraceRecord(header, line, delimiter)
             records.append(trace_record)
         except Exception as e:
             logging.error("Error parsing line in trace file %s: %s", filepath, e)
+            raise e
     return records
 
 ##################################
 # MARK: Private functions
 ##################################
 
-def _get_ci_file_data(filename: str) -> Tuple[List[str], List[str]]:
+def _get_ci_file_data(filename: str, delimiter: str = DELIMITER) -> Tuple[List[str], List[str]]:
     """
     Get raw carbon intensity file data.
     
@@ -248,7 +249,7 @@ def _get_ci_file_data(filename: str) -> Tuple[List[str], List[str]]:
     except Exception as e:
         logging.error("Error reading file %s: %s", filename, e)
         raise
-    header = [val.strip() for val in raw[0].split(",")]
+    header = [val.strip() for val in raw[0].split(delimiter)]
     data = raw[1:]
     return (header, data)
 

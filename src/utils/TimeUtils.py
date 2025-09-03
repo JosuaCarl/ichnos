@@ -15,7 +15,7 @@ from src.models.TraceRecord import TraceRecord
 from src.models.CarbonRecord import CarbonRecord
 from src.models.TasksByTimeResult import TasksByTimeResult
 from src.utils.Parsers import parse_trace_file
-from src.Constants import FILE, DAY, MONTH, YEAR, HOUR, MINS
+from src.Constants import DELIMITER, FILE, DAY, MONTH, YEAR, HOUR, MINS
 from datetime import datetime
 
 # TODO: timezone conversion for non-utc times
@@ -210,7 +210,7 @@ def get_tasks_by_interval(trace_records: List[TraceRecord], interval: int) -> Ta
     )
 
 
-def extract_tasks_by_interval(filename: str, interval: int) -> TaskExtractionResult:
+def extract_tasks_by_interval(file_path: str, interval: int, delimiter: str = DELIMITER) -> TaskExtractionResult:
     """
     Extract tasks grouped by a specified interval from a trace file.
     
@@ -218,12 +218,10 @@ def extract_tasks_by_interval(filename: str, interval: int) -> TaskExtractionRes
     :param interval: Interval in minutes.
     :return: A TaskExtractionResult object from the parsed trace file.
     """
-    if len(filename.split(".")) > 1:
-        filename = filename.split(".")[-2]
     try:
-        trace_records = parse_trace_file(f"data/trace/{filename}.{FILE}")
+        trace_records = parse_trace_file(file_path, delimiter)
     except Exception as e:
-        logging.error("Failed to parse trace file %s: %s", f"data/trace/{filename}.{FILE}", e)
+        logging.error("Failed to parse trace file %s: %s", file_path, e)
         raise
     return get_tasks_by_interval(trace_records, interval)
 

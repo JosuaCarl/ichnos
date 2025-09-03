@@ -82,16 +82,11 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[datetime, Lis
                 ci_key: str = f'{month}/{day}-{hh}:{mm}'
                 ci_val = ci[ci_key] 
 
-            if check_node_memory:
-                starts: List[int] = [int(task.start) for task in tasks]
-                ends: List[int] = [int(task.complete) for task in tasks]
-
-                earliest: int = min(starts)
-                latest: int = max(ends)
-                realtime: float = (latest - earliest) / 1000 / 3600  # convert from ms to h 
-                node_memory_used.append((realtime, ci_val))
-
             for task in tasks:
+                if check_node_memory:
+                    realtime: float = int(task.realtime) / 1000 / 3600  # convert from ms to h 
+                    node_memory_used.append((realtime, ci_val))
+
                 energy_result = estimate_task_energy_consumption_ccf(task, power_model, model_name, memory_coefficient, system_cores)
                 energy, memory = energy_result.core_consumption, energy_result.memory_consumption
                 energy_pue: float = energy * pue
@@ -123,7 +118,7 @@ if __name__ == "__main__":
     arguments = parse_arguments_with_config(args)
 
     # Data
-    workflow: str = arguments[TRACE]
+    workflow: str = arguments[WORKFLOW_NAME]
     pue: float = arguments[PUE]
     interval: int = arguments[INTERVAL]
     model_name: str = arguments[MODEL_NAME]
