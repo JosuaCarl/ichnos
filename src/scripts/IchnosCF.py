@@ -14,13 +14,15 @@ from src.models.TaskExtractionResult import TaskExtractionResult
 
 import sys
 
-def main(arguments: Dict[str, Any]) -> IchnosResult:
+def main(args: List[str]) -> IchnosResult:
     """
     Main function to compute and report the carbon footprint.
     
     :param arguments: Argument dictionary parsed from command line.
     :return: An IchnosResult object containing the summary and emissions.
     """
+    # Get arguments
+    arguments: Dict[str, Any] = parse_arguments_with_config(args)
 
     # Data
     # Check for required entries
@@ -131,13 +133,11 @@ def get_carbon_footprint(command: str) -> IchnosResult:
     :param command: Command string.
     :return: A tuple of (summary string, carbon emissions).
     """
-    arguments = parse_arguments_with_config(command.split(' '))
-    return main(arguments)
+    return main(command.split(' '))
 
 
 # Main Script
 if __name__ == '__main__':
     # Parse Arguments
     args: List[str] = sys.argv[1:]
-    arguments = parse_arguments_with_config(args)
-    main(arguments)
+    main(args)

@@ -9,11 +9,6 @@ uv sync
 After that you can also run each command without `uv run`, provided you did not activate another environment. You can activate it via `source .venv/bin/activate`.
 
 ## Usage
-With a configuration file, like [config.yaml](example/config.yaml):
-```bash
-uv run python -m src.scripts.IchnosCF -c <path/to/your/config.yaml>
-```
-
 > [!IMPORTANT]  
 > The trace file must use raw data values (e.g. duration recorded in ms). Please set `trace.raw = true` in your `nextflow.config`. In addition to the standard fields, `start`, `complete`, `cpus`, `memory`, `process` must be added to the trace file.
 >
@@ -25,6 +20,17 @@ uv run python -m src.scripts.IchnosCF -c <path/to/your/config.yaml>
 >  }
 > ```
 
+General usage:
+```bash
+<path/to/ichnos-folder/.venv/bin/python <path/to/ichnos-folder> calculate-emissions <commands>
+```
+
+Example with a configuration file, like [config.yaml](example/config.yaml):
+```bash
+uv run python . calculate-emissions -c example/config.yaml
+```
+
+
 ## Output
 The script will produce two files. If the trace file name was 'test', then 'test-trace.csv' would produce a csv file of Carbon Records with energy consumption (inc. PUE) and carbon footprint for each task in the trace file. The 'test-summary.txt' file will contain details around the provided parameters (e.g. CI, PUE) and the overall energy, memory and carbon footprint.     
 See the [test-summary](output/test-summary.txt) and [test-trace](output/test-trace.csv). 
@@ -33,8 +39,7 @@ See the [test-summary](output/test-summary.txt) and [test-trace](output/test-tra
 Using the [convertor](src/scripts/Convertor.py) we can create updated trace files with an updated timestamp (only altering for the same day by a number of hours and minutes at present) to show how Carbon Intensity affects the Carbon Footprint over a day (or some given period in the future).   
 See example output:
 ```bash
-uv run python3 -m src.scripts.Convertor nf-rangeland-21-1.txt - 6 0 \;
-uv run python3 -m src.scripts.Convertor nf-rangeland-21-1.txt + 6 0 \;
+uv run python . convert nf-rangeland-21-1.txt - 6 0 \;
 ```
 
 ## 📖 Publications

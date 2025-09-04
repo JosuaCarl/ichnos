@@ -144,7 +144,7 @@ def validate_arguments(args: list[str]) -> Dict[str, Any]:
     }
 
 
-def convert(settings: Dict[str, Any]) -> str:
+def convert(arguments: list[str]) -> str:
     """
     Perform the trace file conversion based on the provided settings.
 
@@ -153,6 +153,9 @@ def convert(settings: Dict[str, Any]) -> str:
     Returns:
         str: The name of the new trace file (without path).
     """
+    # Validate and parse arguments
+    settings: Dict[str, Any] = validate_arguments(arguments)
+
     command = settings[COMMAND]
     filename = settings[TRACE_FILE]
     delimiter = settings[DELIMITER]
@@ -183,15 +186,10 @@ def convertor(command: str) -> str:
     Returns:
         str: The name of the new trace file (without path).
     """
-    parts = command.split(" ")
-    settings = validate_arguments(parts)
-
-    return convert(settings)
+    return convert(command.split(" "))
 
 
 # Main
 if __name__ == "__main__":
     arguments: list[str] = sys.argv[1:]
-    settings = validate_arguments(arguments)
-
-    convert(settings)
+    convert(arguments)
