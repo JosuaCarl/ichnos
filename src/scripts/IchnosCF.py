@@ -5,12 +5,16 @@ from src.utils.TimeUtils import extract_tasks_by_interval
 from src.utils.Parsers import parse_ci_intervals, parse_arguments_with_config, parse_trace_file
 from src.utils.FileWriters import write_summary_file, write_task_trace_and_rank_report
 from src.utils.NodeConfigModelReader import get_cpu_model
-from src.Constants import DELIMITER, WORKFLOW_NAME, TRACE_FILE, TRACE_DELIMITER, PUE, INTERVAL, MODEL_NAME, MEMORY_COEFFICIENT, DEFAULT_MEMORY_POWER_DRAW, RESERVED_MEMORY, NUM_OF_NODES, CI, CI_FILE, CI_DELIMITER, NODE_CONFIG_FILE, OUT_FOLDER
 from src.scripts.OperationalCarbon import calculate_carbon_footprint_ccf
 from src.scripts.EmbodiedCarbon import embodied_carbon_for_trace_records
 from src.models.IchnosResult import IchnosResult
 from src.models.OperationalCarbonResult import OperationalCarbonResult
 from src.models.TaskExtractionResult import TaskExtractionResult
+
+from src.Constants import DELIMITER, DEFAULT_MEMORY_POWER_DRAW, WORKFLOW_NAME,\
+TRACE_FILE, TRACE_DELIMITER, CI, CI_FILE, CI_DELIMITER,\
+NODE_CONFIG_FILE, OUT_FILES, OUT_FOLDER, OUT_FILE_NAME,\
+PUE, INTERVAL, MODEL_NAME, MEMORY_COEFFICIENT, RESERVED_MEMORY, NUM_OF_NODES
 
 import sys
 
@@ -46,7 +50,9 @@ def main(args: List[str]) -> IchnosResult:
     model_name: str = arguments[MODEL_NAME]
     memory_coefficient: float = arguments.get(MEMORY_COEFFICIENT, DEFAULT_MEMORY_POWER_DRAW)
 
+    out_files = arguments.get(OUT_FILES, ["summary", "trace"])
     out_folder = arguments.get(OUT_FOLDER, "output")
+    out_file_name = arguments.get(OUT_FILE_NAME, f"{workflow_name}-{model_name}")
     
     ## Get raw TraceRecords for computing embodied carbon
     try:
@@ -115,9 +121,11 @@ def main(args: List[str]) -> IchnosResult:
         print(res_report)
         print(energy_split_report)
 
-    # Report Summary
-    write_summary_file(out_folder, f"{workflow_name}-{model_name}", summary)
-    write_task_trace_and_rank_report(out_folder, f"{workflow_name}-{model_name}", records_res)
+    # Report results
+    if "summary" in out_files:
+        write_summary_file(out_folder, out_file_name, summary)
+    if "trace" in out_files:
+        write_task_trace_and_rank_report(out_folder, out_file_name, records_res)
 
     return IchnosResult(
         summary=summary,

@@ -30,6 +30,8 @@ TASK_FLAG = True
 MODEL_NAME = 'model-name' 
 
 OUT_FOLDER = "out-folder"
+OUT_FILE_NAME = "out-file-name"
+OUT_FILES = "out-files"
 
 # FetchCarbonIntensity Constants
 NG_BASE_URL = "https://api.carbonintensity.org.uk/"
