@@ -13,7 +13,7 @@ from src.models.TaskExtractionResult import TaskExtractionResult
 
 from src.Constants import DELIMITER, DEFAULT_MEMORY_POWER_DRAW, WORKFLOW_NAME,\
 TRACE_FILE, TRACE_DELIMITER, CI, CI_FILE, CI_DELIMITER,\
-NODE_CONFIG_FILE, OUT_FILES, OUT_FOLDER, OUT_FILE_NAME,\
+NODE_CONFIG_FILE, OUT_FILES, OUT_FOLDER, OUT_FILE_PREFIX,\
 PUE, INTERVAL, MODEL_NAME, MEMORY_COEFFICIENT, RESERVED_MEMORY, NUM_OF_NODES
 
 import sys
@@ -52,7 +52,7 @@ def main(args: List[str]) -> IchnosResult:
 
     out_files = arguments.get(OUT_FILES, ["summary", "trace"])
     out_folder = arguments.get(OUT_FOLDER, "output")
-    out_file_name = arguments.get(OUT_FILE_NAME, f"{workflow_name}-{model_name}")
+    out_file_prefix = arguments.get(OUT_FILE_PREFIX, f"{workflow_name}-{model_name}")
     
     ## Get raw TraceRecords for computing embodied carbon
     try:
@@ -123,9 +123,9 @@ def main(args: List[str]) -> IchnosResult:
 
     # Report results
     if "summary" in out_files:
-        write_summary_file(out_folder, out_file_name, summary)
+        write_summary_file(out_folder, out_file_prefix, summary)
     if "trace" in out_files:
-        write_task_trace_and_rank_report(out_folder, out_file_name, records_res)
+        write_task_trace_and_rank_report(out_folder, out_file_prefix, records_res)
 
     return IchnosResult(
         summary=summary,

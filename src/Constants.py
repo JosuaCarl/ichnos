@@ -30,7 +30,7 @@ TASK_FLAG = True
 MODEL_NAME = 'model-name' 
 
 OUT_FOLDER = "out-folder"
-OUT_FILE_NAME = "out-file-name"
+OUT_FILE_PREFIX = "out-file-prefix"
 OUT_FILES = "out-files"
 
 # FetchCarbonIntensity Constants
