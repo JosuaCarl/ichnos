@@ -15,3 +15,6 @@ output/
 # uv
 uv.lock
 .venv/
+
+# Python
+*.egg-info
