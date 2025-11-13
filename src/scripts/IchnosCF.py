@@ -13,7 +13,6 @@ from src.models.OperationalCarbonResult import OperationalCarbonResult
 from src.models.TaskExtractionResult import TaskExtractionResult
 
 import sys
-import yaml
 
 def main(arguments: Dict[str, Union[str, float, int]]) -> IchnosResult:
     """
