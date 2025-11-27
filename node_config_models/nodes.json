@@ -9,7 +9,10 @@
 		"tdp_per_core": 11.875,
 		"system_cores": 32,
 		"memory": 64,
-		"cpu_model": "Intel Xeon E5-2640"
+		"cpu_model": "Intel Xeon E5-2640",
+		"cpu_count": 2,
+		"memory_model": "Smart Modular 8GB DDR3-1866 ECC Registered RDIMM",
+		"memory_slots": 8
 	},
 	"gpgnode-05": {
 		"conservative": {"mem_draw": 0.359375, "linear": [ 0.8576575757575763, 63.10257575757577 ], "min_watts": 52.65, "max_watts": 137.07666666666668},
@@ -21,7 +24,10 @@
   		"tdp_per_core": 11.875,
 		"system_cores": 32,
 		"memory": 64,
-		"cpu_model": "Intel Xeon E5-2640"
+		"cpu_model": "Intel Xeon E5-2640",
+		"cpu_count": 2,
+		"memory_model": "Smart Modular 8GB DDR3-1866 ECC Registered RDIMM",
+		"memory_slots": 8
 	},
 	"gpgnode-06": {
 		"conservative": {"mem_draw": 0.3885416666666666, "linear": [ 0.5608333333333335, 50.48409090909092 ], "min_watts": 42.916666666666664, "max_watts": 98.99},
@@ -33,7 +39,10 @@
 		"tdp_per_core": 11.875,
 		"system_cores": 32,
 		"memory": 64,
-		"cpu_model": "Intel Xeon E5-2640"
+		"cpu_model": "Intel Xeon E5-2640",
+		"cpu_count": 2,
+		"memory_model": "Smart Modular 8GB DDR3-1866 ECC Registered RDIMM",
+		"memory_slots": 8
 	},
 	"gpgnode-07": {
 		"conservative": {"mem_draw": 0.33544270833333334, "linear": [ 0.5362818181818182, 49.611363636363656 ], "min_watts": 42.36, "max_watts": 95.89},
@@ -45,7 +54,10 @@
 		"tdp_per_core": 11.875,
 		"system_cores": 32,
 		"memory": 64,
-		"cpu_model": "Intel Xeon E5-2640"
+		"cpu_model": "Intel Xeon E5-2640",
+		"cpu_count": 2,
+		"memory_model": "Smart Modular 8GB DDR3-1866 ECC Registered RDIMM",
+		"memory_slots": 8
 	},
 	"gpgnode-08": {
 		"conservative": {"mem_draw": 0.35182291666666665, "linear": [ 0.5454818181818184, 49.187121212121184 ], "min_watts": 42.169999999999995, "max_watts": 95.87666666666667},
@@ -57,7 +69,10 @@
   		"tdp_per_core": 11.875,
 		"system_cores": 32,
 		"memory": 64,
-		"cpu_model": "Intel Xeon E5-2640"
+		"cpu_model": "Intel Xeon E5-2640",
+		"cpu_count": 2,
+		"memory_model": "Smart Modular 8GB DDR3-1866 ECC Registered RDIMM",
+		"memory_slots": 8
 	},
 	"gpgnode-13": {
 		"powersave": {
@@ -74,7 +89,10 @@
 		},
 		"tdp_per_core": 11.875,
 		"system_cores": 32,
-		"cpu_model": "Intel Xeon E5-2640"
+		"cpu_model": "Intel Xeon E5-2640",
+		"cpu_count": 2,
+		"memory_model": "Smart Modular 8GB DDR3-1866 ECC Registered RDIMM",
+		"memory_slots": 8
 	}, 
 	"gpgnode-14": {
 		"powersave": {
@@ -91,7 +109,10 @@
 		},
 		"tdp_per_core": 11.875,
 		"system_cores": 32,
-		"cpu_model": "Intel Xeon E5-2640"
+		"cpu_model": "Intel Xeon E5-2640",
+		"cpu_count": 2,
+		"memory_model": "Smart Modular 8GB DDR3-1866 ECC Registered RDIMM",
+		"memory_slots": 8
 	}, 
 	"gpgnode-15": {
 		"powersave": {
@@ -108,7 +129,10 @@
 		},
 		"tdp_per_core": 11.875,
 		"system_cores": 32,
-		"cpu_model": "Intel Xeon E5-2640"
+		"cpu_model": "Intel Xeon E5-2640",
+		"cpu_count": 2,
+		"memory_model": "Smart Modular 8GB DDR3-1866 ECC Registered RDIMM",
+		"memory_slots": 8
 	}, 
 	"gpgnode-22": {
 		"powersave": {
