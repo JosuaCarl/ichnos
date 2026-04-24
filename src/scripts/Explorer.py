@@ -4,6 +4,7 @@ from src.scripts.IchnosCF import get_carbon_footprint
 from src.utils.Usage import print_usage_exit_Explorer as print_usage_exit
 from typing import List, Tuple, Dict
 from src.models.IchnosResult import IchnosResult
+from src.scripts.NFTracesToUniversal import convert_contains
 
 import sys
 import os
@@ -25,6 +26,8 @@ MODEL_NAME = "model-name"
 INTERVAL = "interval"
 PUE = "pue"
 MEMORY_COEFFICIENT = "memory-coeff"
+MEMORY = "memory"
+NODES = "nodes"
 
 
 # Functions
@@ -59,7 +62,7 @@ def shift_trace(trace: str, delim: str, shift: str = DEFAULT_SHIFT) -> Tuple[str
     return (trace_backward, trace, trace_forward)
 
 
-def calculate_footprint(trace: str, ci: str, model_name: str, interval: int = 60, pue: float = 1.0, memory_coeff: float = 0.392) -> IchnosResult:
+def calculate_footprint(trace: str, ci: str, model_name: str, memory: int, nodes: int, interval: int = 60, pue: float = 1.0, memory_coeff: float = 0.392) -> IchnosResult:
     """
     Calculate the carbon footprint for a given trace using the IchnosCF pipeline.
 
@@ -74,7 +77,7 @@ def calculate_footprint(trace: str, ci: str, model_name: str, interval: int = 60
     Returns:
         IchnosResult: The result object containing summary and emissions.
     """
-    command = f"{trace} {ci} {model_name} {interval} {pue} {memory_coeff}"
+    command = f"{trace} {ci} {model_name} {interval} {pue} {memory_coeff} {memory} {nodes}"
     return get_carbon_footprint(command)
 
 
@@ -133,7 +136,7 @@ def parse_arguments(arguments: List[str]) -> Dict[str, str]:
     Returns:
         Dict[str, str]: Parsed settings dictionary.
     """
-    if len(arguments) != 7:
+    if len(arguments) != 9:
         print_usage_exit()
     return {
         TRACE: arguments[0].strip(),
@@ -142,11 +145,13 @@ def parse_arguments(arguments: List[str]) -> Dict[str, str]:
         MODEL_NAME: arguments[3].strip(),
         INTERVAL: int(arguments[4].strip()),
         PUE: float(arguments[5].strip()),
-        MEMORY_COEFFICIENT: float(arguments[6].strip())
+        MEMORY_COEFFICIENT: float(arguments[6].strip()),
+        MEMORY: int(arguments[7].strip()),
+        NODES: int(arguments[8].strip())
     }
 
 
-def shift_trace_both_directions_by_h(trace: str, delim: str, shift_by: int, ci: str, model_name: str, interval: int, pue: float, memory_coeff: float) -> List[Tuple[str, IchnosResult]]:
+def shift_trace_both_directions_by_h(trace: str, delim: str, shift_by: int, ci: str, model_name: str, interval: int, pue: float, memory_coeff: float, memory: int, nodes: int) -> List[Tuple[str, IchnosResult]]:
     """
     Generate traces shifted both backward and forward by up to shift_by hours, and calculate their footprints.
 
@@ -159,6 +164,8 @@ def shift_trace_both_directions_by_h(trace: str, delim: str, shift_by: int, ci: 
         interval (int): Interval in minutes.
         pue (float): Power Usage Effectiveness.
         memory_coeff (float): Memory power coefficient.
+        memory (int): Memory in GB on each node.
+        nodes (int): Number of nodes allocated.
 
     Returns:
         List[Tuple[str, IchnosResult]]: List of (trace, result) pairs for all shifts.
@@ -178,14 +185,14 @@ def shift_trace_both_directions_by_h(trace: str, delim: str, shift_by: int, ci: 
         forward_traces.append(trace_fwd)
     footprints: List[Tuple[str, IchnosResult]] = []
     for trace_bwd in backward_traces:
-        footprints.append((trace_bwd, calculate_footprint(trace_bwd, ci, model_name, interval, pue, memory_coeff)))
-    footprints.append((trace, calculate_footprint(trace, ci, model_name, interval, pue, memory_coeff)))
+        footprints.append((trace_bwd, calculate_footprint(trace_bwd, ci, model_name, memory, nodes, interval, pue, memory_coeff)))
+    footprints.append((trace, calculate_footprint(trace, ci, model_name, memory, nodes, interval, pue, memory_coeff)))
     for trace_fwd in forward_traces:
         footprints.append((trace_fwd, calculate_footprint(trace_fwd, ci, model_name, interval, pue, memory_coeff)))
     return footprints
 
 
-def shift_trace_forwards_by_h(trace: str, delim: str, shift_by: int, ci: str, model_name: str, interval: int, pue: float, memory_coeff: float) -> List[Tuple[str, IchnosResult]]:
+def shift_trace_forwards_by_h(trace: str, delim: str, shift_by: int, ci: str, model_name: str, interval: int, pue: float, memory_coeff: float, memory: int, nodes: int) -> List[Tuple[str, IchnosResult]]:
     """
     Generate traces shifted forward by up to shift_by hours, and calculate their footprints.
 
@@ -198,6 +205,8 @@ def shift_trace_forwards_by_h(trace: str, delim: str, shift_by: int, ci: str, mo
         interval (int): Interval in minutes.
         pue (float): Power Usage Effectiveness.
         memory_coeff (float): Memory power coefficient.
+        memory (int): Memory in GB on each node.
+        nodes (int): Number of nodes allocated.
 
     Returns:
         List[Tuple[str, IchnosResult]]: List of (trace, result) pairs for all shifts.
@@ -213,10 +222,13 @@ def shift_trace_forwards_by_h(trace: str, delim: str, shift_by: int, ci: str, mo
             shift = f"00-{str(i).zfill(2)}-00"
         (_, _, trace_fwd) = shift_trace(trace, delim, shift)
         forward_traces.append(trace_fwd)
+    trace_dir= 'data/trace'
+    out_dir = 'data/universal_traces'
+    convert_contains(trace_dir, out_dir, '-00')
     footprints: List[Tuple[str, IchnosResult]] = []
-    footprints.append((trace, calculate_footprint(trace, ci, model_name, interval, pue, memory_coeff)))
+    footprints.append((trace, calculate_footprint(trace, ci, model_name, memory, nodes, interval, pue, memory_coeff)))
     for trace_fwd in forward_traces:
-        footprints.append((trace_fwd, calculate_footprint(trace_fwd, ci, model_name, interval, pue, memory_coeff)))
+        footprints.append((trace_fwd, calculate_footprint(trace_fwd, ci, model_name, memory, nodes, interval, pue, memory_coeff)))
     return footprints
 
 
@@ -228,5 +240,5 @@ if __name__ == "__main__":
     output_folder = get_output_folder(settings[SHIFT], settings[TRACE], settings[CI])
     os.makedirs(output_folder, exist_ok=True)
 
-    footprints = shift_trace_forwards_by_h(settings[TRACE], ",", settings[SHIFT], settings[CI], settings[MODEL_NAME], settings[INTERVAL], settings[PUE], settings[MEMORY_COEFFICIENT])
+    footprints = shift_trace_forwards_by_h(settings[TRACE], ",", settings[SHIFT], settings[CI], settings[MODEL_NAME], settings[INTERVAL], settings[PUE], settings[MEMORY_COEFFICIENT], settings[MEMORY], settings[NODES])
     report_summary(output_folder, settings, footprints)

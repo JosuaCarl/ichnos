@@ -8,7 +8,9 @@ from src.models.IchnosTrace import IchnosTrace
 class ProcessedTrace:
     """Processed trace with carbon/CI metrics.
 
-    Contains a reference to the originating IchnosTrace plus derived metrics:
+    Contains a reference to the originating UniversalTrace plus derived metrics:
+      - core_kwh: dynamic energy associated with core for the task
+      - mem_kwh: dynamic energy associated with memory for the task
       - average_co2e: average (or total / averaged) operational CO2e for the task
       - marginal_co2e: marginal CO2e (e.g. location / time dependent marginal intensity * energy)
       - embodied_co2e: allocated embodied emissions (hardware manufacturing amortised share)
@@ -18,7 +20,9 @@ class ProcessedTrace:
     Conversion from IchnosTrace -> ProcessedTrace will be handled by Ichnos' CO2e
     estimation strategies (not implemented here).
     """
-    ichnos: IchnosTrace
+    universal: IchnosTrace
+    core_kwh: float
+    mem_kwh: float
     average_co2e: float
     marginal_co2e: float
     embodied_co2e: float
@@ -47,6 +51,8 @@ class ProcessedTrace:
             'rapl_timeseries': u.rapl_timeseries or '',
             'cpu_usage_timeseries': u.cpu_usage_timeseries or '',
             # Processed metrics
+            'core_kwh': self.core_kwh,
+            'mem_kwh': self.mem_kwh,
             'average_co2e': self.average_co2e,
             'marginal_co2e': self.marginal_co2e,
             'embodied_co2e': self.embodied_co2e,
@@ -58,7 +64,7 @@ class ProcessedTrace:
     def fieldnames() -> List[str]:
         return [
             'id','name','start','end','cpu_count','avg_cpu_usage','cpu_model','memory',
-            'rapl_timeseries','cpu_usage_timeseries',
+            'rapl_timeseries','cpu_usage_timeseries','core_kwh','mem_kwh',
             'average_co2e','marginal_co2e','embodied_co2e','avg_ci','ci_timeseries'
         ]
 

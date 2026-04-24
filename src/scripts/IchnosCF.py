@@ -105,6 +105,7 @@ def main(arguments: Dict[str, Union[str, float, int]]) -> IchnosResult:
     op_carbon_emissions = op_carbon_result.carbon_emissions
     static_energy_per_host = op_carbon_result.static_cpu_energy_per_host
     static_memory_energy = op_carbon_result.static_mem_energy
+    static_memory_emissions = op_carbon_result.static_mem_emissions
     records_res = op_carbon_result.records
 
     op_water_emissions = op_carbon_result.water_emissions
@@ -158,9 +159,10 @@ def main(arguments: Dict[str, Union[str, float, int]]) -> IchnosResult:
         print(f"Total Land Use Footprint: {op_land_emissions} square meters")
     
     if check_reserved_memory_flag:
-        total_energy: float = static_memory_energy + cpu_energy + mem_energy
-        res_report: str = f"Reserved Memory Energy Consumption: {static_memory_energy}kWh"
-        energy_split_report: str = f"% CPU [{((cpu_energy / total_energy) * 100):.2f}%] | % Memory [{(((static_memory_energy + mem_energy) / total_energy) * 100):.2f}%]"
+        total_energy: float = cpu_energy + mem_energy
+        res_report: str = f"Reserved Memory Energy Consumption: {static_memory_energy}kWh\n"
+        res_report += f"Reserved Memory Carbon Emissions: {static_memory_emissions}gCO2e"
+        energy_split_report: str = f"% CPU [{((cpu_energy / total_energy) * 100):.2f}%] | % Memory [{((mem_energy / total_energy) * 100):.2f}%]"
         summary += f"\n{res_report}\n"
         summary += f"{energy_split_report}\n"
         print(res_report)

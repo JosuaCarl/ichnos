@@ -16,5 +16,6 @@ class OperationalCarbonResult:
     land_emissions: float # in square meters
     static_cpu_energy_per_host: Dict[str, float]
     static_mem_energy: float
+    static_mem_emissions: float
     # List of processed trace (per interval or per original task instance)
     records: List[ProcessedTrace]
