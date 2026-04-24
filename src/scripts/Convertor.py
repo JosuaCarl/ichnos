@@ -48,8 +48,8 @@ def create_trace_file(trace: str, delim: str, offset: int, new_filename: str) ->
 
         for row in data:
             parts = row.split(delim)
-            start = int(parts[start_i])
-            end = int(parts[end_i])
+            start = float(parts[start_i])
+            end = float(parts[end_i])
             new_start = int(start + offset)
             new_end = int(end + offset)
             parts[start_i] = str(new_start)

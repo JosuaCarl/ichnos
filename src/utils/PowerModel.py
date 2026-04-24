@@ -18,7 +18,7 @@ def get_power_model_for_node(node_id: str, model_name: str) -> Callable[[float],
         return (MathModels.min_max_linear_power_model(min_watts, max_watts), min_watts)
     elif model_type == 'baseline':
         tdp_per_core = node_config[node_id]['tdp_per_core']
-        return (MathModels.fitted_linear_power_model(tdp_per_core, 0), 0)
+        return (MathModels.baseline_linear_power_model(tdp_per_core), 0)
     elif model_type == 'linear':
         linear_vals = node_config[node_id][governor]['linear']
         coeff = linear_vals[0]
