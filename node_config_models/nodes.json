@@ -12,6 +12,20 @@
 			"quadratic": [-0.01, 4.01, 50.01]
 		}
 	},
+
+	"firefly": {
+		"tdp_per_core": 10.83333333,
+		"system_cores": 12,
+		"cpu_model": "Intel(R) Xeon(R) CPU E5-1650 v2 @ 3.50GHz",
+		"memory": 128,
+		"default": {
+			"mem_draw": 9.950666666666666e-08,
+			"min_watts": 6.863333333333333,
+			"max_watts": 81.95666666666666,
+			"linear": [ 0.5655212121212121, 33.92606060606062 ],
+			"quadratic": [0, 0, 0]
+		}
+	},
     
 	"thanos": {
 		"tdp_per_core": 7.8125,
