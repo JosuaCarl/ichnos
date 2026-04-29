@@ -10,7 +10,7 @@ data/raw-traces/
 # Output Directory
 output/
 
-data/universal_traces/
+data/ichnos_traces/
 data/intensity_timeseries/
 
 data/trace
@@ -28,3 +28,7 @@ data/ichnos_config/
 eval_scripts/
 
 .DS_Store
+
+rsync_*.sh
+
+*.bak

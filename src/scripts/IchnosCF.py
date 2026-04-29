@@ -1,19 +1,18 @@
 import logging
 from typing import Dict, List, Tuple, Union
 from src.utils.TimeUtils import to_timestamp, extract_tasks_by_interval
-from src.utils.Parsers import parse_ci_intervals, parse_arguments_with_config, parse_universal_trace_file
+from src.utils.Parsers import parse_ci_intervals, parse_arguments_with_config, parse_ichnos_trace_file
 from src.utils.FileWriters import write_summary_file, write_task_trace_and_rank_report
-from src.utils.NodeConfigModelReader import get_memory_draw
+from src.utils.NodeConfigModelReader import get_memory_draw, get_cpu_model
 from src.Constants import *
 from src.scripts.OperationalCarbon import calculate_carbon_footprint_ccf
 from src.scripts.EmbodiedCarbon import calculate_cpu_embodied_carbon
-from src.models.UniversalTrace import UniversalTrace
+from src.models.IchnosTrace import IchnosTrace
 from src.models.IchnosResult import IchnosResult
 from src.models.OperationalCarbonResult import OperationalCarbonResult
 from src.models.TaskExtractionResult import TaskExtractionResult
 
 import sys
-import yaml
 
 def main(arguments: Dict[str, Union[str, float, int]]) -> IchnosResult:
     """
@@ -37,14 +36,14 @@ def main(arguments: Dict[str, Union[str, float, int]]) -> IchnosResult:
     tasks_by_interval = task_extraction_result.tasks_by_interval
     unique_nodes = list({task.hostname for task in task_extraction_result.all_tasks})
 
-    ## Get raw UniversalTrace records for computing embodied carbon
+    ## Get raw IchnosTrace records for computing embodied carbon
     filename: str = workflow
     if len(filename.split(".")) > 1:
         filename = filename.split(".")[-2]
     try:
-        trace_records: List[UniversalTrace] = parse_universal_trace_file(f"data/universal_traces/{filename}.{FILE}")
+        trace_records: List[IchnosTrace] = parse_ichnos_trace_file(f"data/ichnos_traces/{filename}.{FILE}")
     except Exception as e:
-        logging.error("Failed to parse universal trace file %s: %s", f"data/universal_traces/{filename}.{FILE}", e)
+        logging.error("Failed to parse ichnos trace file %s: %s", f"data/ichnos_traces/{filename}.{FILE}", e)
         trace_records = []
     #################
 
@@ -111,14 +110,21 @@ def main(arguments: Dict[str, Union[str, float, int]]) -> IchnosResult:
     op_water_emissions = op_carbon_result.water_emissions
     op_land_emissions = op_carbon_result.land_emissions
 
-    # fallback_cpu_model: str = get_cpu_model(model_name)
-    # # Compute embodied carbon directly from UniversalTrace list (per-task allocation)
-    # emb_carbon_emissions = 0.0
-    # for ut in trace_records:
-    #     cpu_model = ut.cpu_model if (ut.cpu_model and ut.cpu_model != 'None') else fallback_cpu_model
-    #     duration_h = max(0.0, (ut.end - ut.start)) / 1000 / 3600
-    #     emb_carbon_emissions += calculate_cpu_embodied_carbon(cpu_model, duration_h, cpu_usage=1.0)
-    emb_carbon_emissions = 0.0  # TODO: re-implement embodied carbon calculation
+    ######### Compute embodied carbon with per-node CPU models #########
+    node_cpu_models: Dict[str, str] = {}
+    for node in unique_nodes:
+        node_cpu_models[node] = get_cpu_model(node)
+
+    emb_carbon_emissions = 0.0
+    for ut in trace_records:
+        host = ut.hostname
+        # Use the task's cpu_model if available, otherwise fall back to node-specific CPU model
+        cpu_model = ut.cpu_model if (ut.cpu_model and ut.cpu_model != 'None') else node_cpu_models.get(host, None)
+        if cpu_model:
+            duration_h = (ut.end - ut.start) / 1000 / 3600
+            emb_carbon_emissions += calculate_cpu_embodied_carbon(cpu_model, duration_h, cpu_usage=1.0)
+    ###################################################################
+    
     static_energy = 0.0
     for host in static_energy_per_host.keys():
         static_energy += static_energy_per_host[host]
@@ -134,8 +140,11 @@ def main(arguments: Dict[str, Union[str, float, int]]) -> IchnosResult:
     summary += f"- Operational Carbon Emissions: {op_carbon_emissions}gCO2e\n"
     summary += f"- Embodied Carbon Emissions: {emb_carbon_emissions}gCO2e\n"
     summary += f"- Total Carbon Emissions: {total_carbon_emissions}gCO2e\n"
-
     
+    print(f"Energy Consumption (exc. PUE): {cpu_energy + static_energy}kWh")
+    print(f"Energy Consumption (inc. PUE): {cpu_energy_pue + (static_energy * pue)}kWh")
+    print(f"Memory Energy Consumption (exc. PUE): {mem_energy}kWh")
+    print(f"Memory Energy Consumption (inc. PUE): {mem_energy_pue}kWh")
 
     print(f"Operational Carbon Emissions: {op_carbon_emissions}gCO2e")
     print(f"Embodied Carbon Emissions: {emb_carbon_emissions}gCO2e")

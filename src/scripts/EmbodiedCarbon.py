@@ -30,11 +30,11 @@ def calculate_cpu_embodied_carbon(cpu_model: str, duration_used: float, lifetime
 def embodied_carbon_for_processed_traces(records: List[ProcessedTrace], use_cpu_usage: bool = False, fallback_cpu_model: str = None) -> float:
     """Calculate embodied carbon for a list of ProcessedTrace objects.
 
-    Each ProcessedTrace carries a UniversalTrace (processed.universal) supplying time & hardware info.
+    Each ProcessedTrace carries an IchnosTrace (processed.ichnos) supplying time & hardware info.
     """
     total = 0.0
     for rec in records:
-        u = rec.universal
+        u = rec.ichnos
         cpu_model = u.cpu_model if (u.cpu_model and u.cpu_model != 'None') else fallback_cpu_model
         duration_ms = (u.end - u.start)
         duration_used_h = duration_ms / 1000 / 3600 if duration_ms else 0.0

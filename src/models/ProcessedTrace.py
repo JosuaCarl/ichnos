@@ -2,7 +2,7 @@ import csv
 from dataclasses import dataclass
 from typing import List, Optional
 
-from src.models.UniversalTrace import UniversalTrace
+from src.models.IchnosTrace import IchnosTrace
 
 @dataclass
 class ProcessedTrace:
@@ -17,10 +17,12 @@ class ProcessedTrace:
       - avg_ci: average carbon intensity (gCO2e/kWh) used for estimation
       - ci_timeseries: filename of carbon intensity time series used (optional)
 
-    Conversion from UniversalTrace -> ProcessedTrace will be handled by ichnos' CO2e
+    Conversion from IchnosTrace -> ProcessedTrace will be handled by Ichnos' CO2e
     estimation strategies (not implemented here).
     """
-    universal: UniversalTrace
+    core_kwh: float
+    mem_kwh: float
+    ichnos: IchnosTrace
     core_kwh: float
     mem_kwh: float
     average_co2e: float
@@ -37,9 +39,9 @@ class ProcessedTrace:
 
 
     def to_dict(self) -> dict:
-        u = self.universal
+        u = self.ichnos
         return {
-            # UniversalTrace fields
+            # IchnosTrace fields
             'id': u.id,
             'name': u.name,
             'start': u.start,

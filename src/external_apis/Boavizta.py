@@ -3,6 +3,47 @@ from diskcache import Cache
 
 cache = Cache('cache/boavizta_cache')
 
+ALLOWED_COMPONENTS = {
+    'cpu',
+    'ssd',
+    'ram',
+    'hdd',
+    'motherboard',
+    'power_supply',
+    'case',
+}
+
+@cache.memoize()
+def get_component_impact(component: str, name: str):
+    """
+    Retrieve the embedded Global Warming Potential (GWP) impact value for a hardware component.
+
+    Supports components: cpu, ssd, ram, hdd, motherboard, power_supply, case.
+
+    Args:
+        component (str): The component type (one of the supported components).
+        name (str): The component name/identifier to query (e.g., "Intel Core i7-11700K").
+
+    Returns:
+        float: The embedded GWP impact value.
+
+    Raises:
+        ValueError: If the component is not supported.
+        RuntimeError: If the API response doesn't contain the expected data.
+    """
+    component_lower = component.lower()
+    if component_lower not in ALLOWED_COMPONENTS:
+        raise ValueError(f"Unsupported component '{component}'. Supported: {', '.join(sorted(ALLOWED_COMPONENTS))}")
+
+    print(f"Fetching {component_lower} impact for {name}")
+    url = f"https://api.boavizta.org/v1/component/{component_lower}?verbose=false"
+    response = make_json_post_request(url, {'name': name})
+
+    try:
+        return response['impacts']['gwp']['embedded']['value']
+    except Exception as exc:
+        raise RuntimeError(f"Unexpected API response structure for component='{component_lower}', name='{name}': {response}") from exc
+
 @cache.memoize()
 def get_cpu_impact(cpu_name: str):
     """

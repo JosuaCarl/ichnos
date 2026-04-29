@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 @dataclass
-class UniversalTrace:
-    """A minimal, universal trace record for workflow tasks. The idea is to provide a consistent schema for representing task execution data across different systems. Any kind of workload (Nextflow, Spark, Airflow, other) that can be broken down into a set of tasks can be represented by this trace format.
+class IchnosTrace:
+    """A minimal IchnosTrace record for workflow tasks. The idea is to provide a consistent schema for representing task execution data across different systems. Any kind of workload (Nextflow, Spark, Airflow, other) that can be broken down into a set of tasks can be represented by this trace format.
 
     Required fields:
       - id: unique task identifier
@@ -55,28 +55,28 @@ class UniversalTrace:
         ]
 
     @staticmethod
-    def to_csv(traces: List['UniversalTrace'], filepath: str):
+    def to_csv(traces: List['IchnosTrace'], filepath: str):
         if not traces:
             # still create an empty file with header for schema visibility
             with open(filepath, 'w', newline='') as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames=UniversalTrace.fieldnames())
+                writer = csv.DictWriter(csvfile, fieldnames=IchnosTrace.fieldnames())
                 writer.writeheader()
             return
         with open(filepath, 'w', newline='') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=UniversalTrace.fieldnames())
+            writer = csv.DictWriter(csvfile, fieldnames=IchnosTrace.fieldnames())
             writer.writeheader()
             for t in traces:
                 writer.writerow(t.to_dict())
 
     @staticmethod
-    def from_csv(filepath: str) -> List['UniversalTrace']:
-        traces: List[UniversalTrace] = []
+    def from_csv(filepath: str) -> List['IchnosTrace']:
+        traces: List[IchnosTrace] = []
         with open(filepath, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 if not row.get('id'):
                     continue
-                traces.append(UniversalTrace(
+                traces.append(IchnosTrace(
                     id=row['id'],
                     name=row.get('name') or '',
                     start=int(row.get('start') or 0),
@@ -93,14 +93,14 @@ class UniversalTrace:
 
     # --- Adapters ---
     @staticmethod
-    def from_nextflow_trace_csv(filepath: str) -> List['UniversalTrace']:
-        """Parse a Nextflow trace CSV file and return UniversalTrace records.
+    def from_nextflow_trace_csv(filepath: str) -> List['IchnosTrace']:
+        """Parse a Nextflow trace CSV file and return IchnosTrace records.
 
         Expected Nextflow columns (lenient): id, start, complete, cpus|cpu, %cpu|cpu_usage, cpu_model, memory|rss
-        We normalise column names to UniversalTrace schema.
+        We normalise column names to IchnosTrace schema.
         Missing numeric fields default to 0; missing strings to ''.
         """
-        traces: List[UniversalTrace] = []
+        traces: List[IchnosTrace] = []
         with open(filepath, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
@@ -136,7 +136,7 @@ class UniversalTrace:
                     except ValueError:
                         memory_val = 0.0
                 hostname = row.get('hostname') or row.get('host') or row.get('node') or ''
-                traces.append(UniversalTrace(
+                traces.append(IchnosTrace(
                     id=task_id,
                     name=name or '',
                     start=start,
