@@ -28,3 +28,7 @@ data/ichnos_config/
 eval_scripts/
 
 .DS_Store
+
+rsync_*.sh
+
+*.bak
