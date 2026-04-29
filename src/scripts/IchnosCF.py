@@ -105,6 +105,7 @@ def main(arguments: Dict[str, Union[str, float, int]]) -> IchnosResult:
     op_carbon_emissions = op_carbon_result.carbon_emissions
     static_energy_per_host = op_carbon_result.static_cpu_energy_per_host
     static_memory_energy = op_carbon_result.static_mem_energy
+    static_memory_emissions = op_carbon_result.static_mem_emissions
     records_res = op_carbon_result.records
 
     op_water_emissions = op_carbon_result.water_emissions
@@ -117,14 +118,15 @@ def main(arguments: Dict[str, Union[str, float, int]]) -> IchnosResult:
     #     cpu_model = ut.cpu_model if (ut.cpu_model and ut.cpu_model != 'None') else fallback_cpu_model
     #     duration_h = max(0.0, (ut.end - ut.start)) / 1000 / 3600
     #     emb_carbon_emissions += calculate_cpu_embodied_carbon(cpu_model, duration_h, cpu_usage=1.0)
-    emb_carbon_emissions = 0.0 # TODO: re-implement embodied carbon calculation
+    emb_carbon_emissions = 0.0  # TODO: re-implement embodied carbon calculation
     static_energy = 0.0
     for host in static_energy_per_host.keys():
         static_energy += static_energy_per_host[host]
 
     total_carbon_emissions = op_carbon_emissions + emb_carbon_emissions
 
-    summary += "\nCloud Carbon Footprint Method:\n"
+    summary += "\nIchnos Output:\n"
+    summary += f"- Static Energy Consumption (exc. PUE): {static_energy}kWh\n"
     summary += f"- Energy Consumption (exc. PUE): {cpu_energy + static_energy}kWh\n"
     summary += f"- Energy Consumption (inc. PUE): {cpu_energy_pue + (static_energy * pue)}kWh\n"
     summary += f"- Memory Energy Consumption (exc. PUE): {mem_energy}kWh\n"
@@ -146,11 +148,12 @@ def main(arguments: Dict[str, Union[str, float, int]]) -> IchnosResult:
     if lue:
         summary += f"- Total Land Use Footprint: {op_land_emissions}\n"
         print(f"Total Land Use Footprint: {op_land_emissions} square meters")
-    
+
     if check_reserved_memory_flag:
-        total_energy: float = static_memory_energy + cpu_energy + mem_energy
-        res_report: str = f"Reserved Memory Energy Consumption: {static_memory_energy}kWh"
-        energy_split_report: str = f"% CPU [{((cpu_energy / total_energy) * 100):.2f}%] | % Memory [{(((static_memory_energy + mem_energy) / total_energy) * 100):.2f}%]"
+        total_energy: float = cpu_energy + mem_energy
+        res_report: str = f"Reserved Memory Energy Consumption: {static_memory_energy}kWh\n"
+        res_report += f"Reserved Memory Carbon Emissions: {static_memory_emissions}gCO2e"
+        energy_split_report: str = f"% CPU [{((cpu_energy / total_energy) * 100):.2f}%] | % Memory [{((mem_energy / total_energy) * 100):.2f}%]"
         summary += f"\n{res_report}\n"
         summary += f"{energy_split_report}\n"
         print(res_report)
