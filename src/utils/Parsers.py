@@ -9,7 +9,7 @@ import logging
 from typing import Tuple, List, Dict, Union
 import yaml
 from src.Constants import *
-from src.models.UniversalTrace import UniversalTrace
+from src.models.IchnosTrace import IchnosTrace
 from src.utils.Usage import print_usage_exit_TemporalInterrupt
 
 """
@@ -208,12 +208,12 @@ def parse_ci_intervals(filename: str) -> Dict[str, float]:
     return ci_map
 
 
-def parse_universal_trace_file(filepath: str) -> List[UniversalTrace]:
-    """Parse a universal trace CSV (produced by UniversalTrace.to_csv)."""
+def parse_ichnos_trace_file(filepath: str) -> List[IchnosTrace]:
+    """Parse an IchnosTrace CSV (produced by IchnosTrace.to_csv)."""
     try:
-        traces = UniversalTrace.from_csv(filepath)
+        traces = IchnosTrace.from_csv(filepath)
     except Exception as e:
-        logging.error("Error parsing universal trace file %s: %s", filepath, e)
+        logging.error("Error parsing ichnos trace file %s: %s", filepath, e)
         raise
     return traces
 
@@ -281,4 +281,3 @@ def _set_defaults_for_missing_args(args_dict: Dict[str, Union[float, int, str]])
     if MEMORY_COEFFICIENT not in args_dict:
         args_dict[MEMORY_COEFFICIENT] = DEFAULT_MEMORY_POWER_DRAW
     return args_dict
-

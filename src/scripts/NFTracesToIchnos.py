@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Batch convert all Nextflow trace CSV files under data/trace into UniversalTrace CSVs.
+"""Batch convert all Nextflow trace CSV files under data/trace into IchnosTrace CSVs.
 
-For every *.csv in data/trace, we parse it using UniversalTrace.from_nextflow_trace_csv
-and output a corresponding CSV with the same filename into data/universal_traces.
+For every *.csv in data/trace, we parse it using IchnosTrace.from_nextflow_trace_csv
+and output a corresponding CSV with the same filename into data/ichnos_traces.
 Existing files are overwritten. Empty outputs still contain a header.
 """
 import os
 import glob
-from src.models.UniversalTrace import UniversalTrace
+from src.models.IchnosTrace import IchnosTrace
 import sys
 
 def convert_all(trace_dir: str, out_dir: str):
@@ -19,12 +19,12 @@ def convert_all(trace_dir: str, out_dir: str):
     count_total = 0
     for src in csv_files:
         try:
-            traces = UniversalTrace.from_nextflow_trace_csv(src)
+            traces = IchnosTrace.from_nextflow_trace_csv(src)
         except Exception as e:
             print(f"[WARN] Failed to parse {os.path.basename(src)}: {e}")
             continue
         dest = os.path.join(out_dir, os.path.basename(src))
-        UniversalTrace.to_csv(traces, dest)
+        IchnosTrace.to_csv(traces, dest)
         rel_dest = os.path.relpath(dest, os.getcwd())
         print(f"Converted {os.path.basename(src)}: {len(traces)} rows -> {rel_dest}")
         count_total += len(traces)
@@ -32,6 +32,6 @@ def convert_all(trace_dir: str, out_dir: str):
 
 if __name__ == '__main__':
     trace_dir = 'data/trace'
-    out_dir = 'data/universal_traces'
+    out_dir = 'data/ichnos_traces'
     total = convert_all(trace_dir, out_dir)
-    print(f"Done. Total UniversalTrace rows written: {total}")
+    print(f"Done. Total IchnosTrace rows written: {total}")

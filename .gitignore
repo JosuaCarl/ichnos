@@ -10,7 +10,7 @@ data/raw-traces/
 # Output Directory
 output/
 
-data/universal_traces/
+data/ichnos_traces/
 data/intensity_timeseries/
 
 data/trace

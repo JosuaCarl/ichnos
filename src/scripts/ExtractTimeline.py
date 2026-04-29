@@ -1,4 +1,4 @@
-from src.models.UniversalTrace import UniversalTrace
+from src.models.IchnosTrace import IchnosTrace
 from src.utils.Usage import print_usage_exit_ExtractTimeline as print_usage_exit
 
 import sys
@@ -17,12 +17,12 @@ MEMORY_COEFFICIENT = 0.392  # CCF Average (See Website)
 
 
 # Functions
-def parse_universal_trace(filepath):
-    return UniversalTrace.from_csv(filepath)
+def parse_ichnos_trace(filepath):
+    return IchnosTrace.from_csv(filepath)
 
 
 
-def get_timeline_data(record: UniversalTrace):
+def get_timeline_data(record: IchnosTrace):
     data = {}
 
     data["process"] = record.name
@@ -131,7 +131,7 @@ def extract_timeline(filename):
     if len(filename.split(".")) > 1:
         filename = filename.split(".")[-2]
 
-    records = parse_universal_trace(f"data/universal_traces/{filename}.{FILE}")
+    records = parse_ichnos_trace(f"data/ichnos_traces/{filename}.{FILE}")
     data_records = []
 
     for record in records:
