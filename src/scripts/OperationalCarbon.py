@@ -206,6 +206,8 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[datetime, Lis
 
                 records.append(ProcessedTrace(
                     ichnos=task,
+                    core_kwh=energy_core,
+                    mem_kwh=energy_mem,
                     average_co2e=task_footprint,
                     marginal_co2e=task_footprint,
                     embodied_co2e=0.0,

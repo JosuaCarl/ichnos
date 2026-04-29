@@ -8,9 +8,9 @@ from src.models.IchnosTrace import IchnosTrace
 class ProcessedTrace:
     """Processed trace with carbon/CI metrics.
 
-    Contains a reference to the originating IchnosTrace plus derived metrics:
-      - core_kwh: energy associated with the core for the task
-      - mem_kwh: energy associated with the memory for the task
+    Contains a reference to the originating UniversalTrace plus derived metrics:
+      - core_kwh: dynamic energy associated with core for the task
+      - mem_kwh: dynamic energy associated with memory for the task
       - average_co2e: average (or total / averaged) operational CO2e for the task
       - marginal_co2e: marginal CO2e (e.g. location / time dependent marginal intensity * energy)
       - embodied_co2e: allocated embodied emissions (hardware manufacturing amortised share)
@@ -23,6 +23,8 @@ class ProcessedTrace:
     core_kwh: float
     mem_kwh: float
     ichnos: IchnosTrace
+    core_kwh: float
+    mem_kwh: float
     average_co2e: float
     marginal_co2e: float
     embodied_co2e: float
