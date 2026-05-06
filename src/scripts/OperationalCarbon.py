@@ -144,12 +144,6 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[datetime, Lis
             if isinstance(ci, float):
                 ci_val: float = ci
             else:
-                #hour_ts = to_timestamp(group_interval)
-                #hh: str = str(hour_ts.hour).zfill(2)
-                #month: str = str(hour_ts.month).zfill(2)
-                #day: str = str(hour_ts.day).zfill(2)
-                #mm: str = str(hour_ts.minute).zfill(2)
-                #ci_key: str = f'{month}/{day}-{hh}:{mm}'
                 ci_val = ci[intensity_key] 
             
             ###################
