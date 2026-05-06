@@ -135,16 +135,16 @@ def main(arguments: Dict[str, Union[str, float, int]]) -> IchnosResult:
     summary += f"- Static Energy Consumption (exc. PUE): {static_energy}kWh\n"
     summary += f"- Energy Consumption (exc. PUE): {cpu_energy + static_energy}kWh\n"
     summary += f"- Energy Consumption (inc. PUE): {cpu_energy_pue + (static_energy * pue)}kWh\n"
-    summary += f"- Memory Energy Consumption (exc. PUE): {mem_energy}kWh\n"
-    summary += f"- Memory Energy Consumption (inc. PUE): {mem_energy_pue}kWh\n"
+    summary += f"- Task Memory Energy Consumption (exc. PUE): {mem_energy}kWh\n"
+    summary += f"- Task Memory Energy Consumption (inc. PUE): {mem_energy_pue}kWh\n"
     summary += f"- Operational Carbon Emissions: {op_carbon_emissions}gCO2e\n"
     summary += f"- Embodied Carbon Emissions: {emb_carbon_emissions}gCO2e\n"
     summary += f"- Total Carbon Emissions: {total_carbon_emissions}gCO2e\n"
     
     print(f"Energy Consumption (exc. PUE): {cpu_energy + static_energy}kWh")
     print(f"Energy Consumption (inc. PUE): {cpu_energy_pue + (static_energy * pue)}kWh")
-    print(f"Memory Energy Consumption (exc. PUE): {mem_energy}kWh")
-    print(f"Memory Energy Consumption (inc. PUE): {mem_energy_pue}kWh")
+    print(f"Task Memory Energy Consumption (exc. PUE): {mem_energy}kWh")
+    print(f"Task Memory Energy Consumption (inc. PUE): {mem_energy_pue}kWh")
 
     print(f"Operational Carbon Emissions: {op_carbon_emissions}gCO2e")
     print(f"Embodied Carbon Emissions: {emb_carbon_emissions}gCO2e")
@@ -160,13 +160,13 @@ def main(arguments: Dict[str, Union[str, float, int]]) -> IchnosResult:
 
     if check_reserved_memory_flag:
         total_energy: float = cpu_energy + mem_energy
-        res_report: str = f"Reserved Memory Energy Consumption: {static_memory_energy}kWh\n"
-        res_report += f"Reserved Memory Carbon Emissions: {static_memory_emissions}gCO2e"
-        energy_split_report: str = f"% CPU [{((cpu_energy / total_energy) * 100):.2f}%] | % Memory [{((mem_energy / total_energy) * 100):.2f}%]"
+        res_report: str = f"Node Memory Energy Consumption: {static_memory_energy}kWh\n"
+        res_report += f"Node Memory Carbon Emissions: {static_memory_emissions}gCO2e"
+        # energy_split_report: str = f"% CPU [{((cpu_energy / total_energy) * 100):.2f}%] | % Memory [{((mem_energy / total_energy) * 100):.2f}%]"
         summary += f"\n{res_report}\n"
-        summary += f"{energy_split_report}\n"
+        # summary += f"{energy_split_report}\n"
         print(res_report)
-        print(energy_split_report)
+        # print(energy_split_report)
 
     # Report Summary
     if isinstance(ci, float):
