@@ -1,6 +1,9 @@
 # Carbon-Footprint
 A project with scripts to methodically calculate the Carbon Footprint of Workflow Executions from Nextflow trace files.
 
+# Setup
+To collect node measurements for CPU and Memory energy consumption, refer to the instructions and scripts available in the [node measurement](node_measurement) directory.
+
 # Usage
 For the current version, replicating the previous calculation approach noted in the Credits section, example usage has been provided with default values:
 ```

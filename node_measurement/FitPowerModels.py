@@ -1,5 +1,5 @@
 import numpy as np
-import sys
+import sys, csv
 
 
 def read_ts(filename):
@@ -44,6 +44,17 @@ def get_average_ts_files(path):
 
     return (data, overall_avg_mem_draw)
 
+
+def read_memory_draw():
+    with open('memory.csv', 'r') as f:
+        lines = [line.strip().split(',') for line in f.readlines()[1:]]
+
+    no_load_draw = float(lines[0][3])
+    load_draw_avg = sum([float(line[3]) for line in lines[1:]]) / 10
+
+    return (round(no_load_draw, 3), round(load_draw_avg, 3))
+
+
 class Polynomial:
     def __init__(self, coefficients):
         self.coeffs = coefficients
@@ -54,7 +65,7 @@ class Polynomial:
             if coeff == 0:
                 continue
             chunks.append(self.format_coeff(coeff))
-        return f'[ {', '.join(chunks)} ]'
+        return f"[ {', '.join(chunks)} ]"
 
     @staticmethod
     def format_coeff(coeff):
@@ -67,9 +78,9 @@ class Polynomial:
 
 # Helper Functions
 def make_model(filename):
-    ts_path = f'data/ts/{filename}-ITER.csv'
+    ts_path = f'ts/ts-ITER.csv'
     node_stats = {}
-    (node_stats[filename], mem_draw) = get_average_ts_files(ts_path)
+    (node_stats[filename], _) = get_average_ts_files(ts_path)
     x = range(0,110,10)
     y = node_stats[filename].values()
     y_arr = list(y)
@@ -78,27 +89,30 @@ def make_model(filename):
     linear_v2 = np.poly1d(linear_v2_coef)
     model_linear_v2 = Polynomial(linear_v2)
 
-    return (model_linear_v2, mem_draw, (min(y_arr), max(y_arr)))
+    return (model_linear_v2, (min(y_arr), max(y_arr)))
 
-def write_output(filename, model, mem_draw, minmax, mem):
-    filename = f'output/{filename}-model.txt'
+
+# update to store in the format expected by ichnos / JSON ? or easily parseable record
+# add versioning, i.e. date/timestamp for it, version like 1.0 and then increment -> 1.1 -- 1.11+
+def write_output(filename, model, mem_draw, minmax, mem, gov):
+    filename = f'{filename}-model.txt'
     (miiin, maaax) = minmax
 
     with open(filename, 'w') as f:
-        model_str = str(model)
-        f.write(filename + '\n')
-        f.write(model_str + '\n')
+        f.write(f'"{filename}": {{\n')
+        f.write(f'"{gov}": {{ "mem_draw": {mem_draw}, "linear": {model}, "min_watts": {miiin}, "max_watts": {maaax} }},\n')
+        f.write('}\n')
+
         f.write(f'Memory Draw: {mem_draw / mem}\n')
-        f.write(f'Idle: {miiin}\n')
-        f.write(f'Max: {maaax}\n')
 
-    print(f'Models: stored in file {filename}')
+    print(f'Model stored in file {filename}')
 
 
-# call with ts filename prefix and memory on the node requested, e.g. for gpg13, this is gpg13-performance and 64GB of RAM
 if __name__ == '__main__':
     args = sys.argv[1:]
     filename = args[0].strip()
     total_mem = int(args[1].strip())
-    (model, mem_draw, minmax) = make_model(filename)
-    write_output(filename, model, mem_draw, minmax, total_mem)
+    gov = args[2].strip()
+    (model, minmax) = make_model(filename)
+    mem_draw = read_memory_draw()
+    write_output(filename, model, mem_draw, minmax, total_mem, gov)

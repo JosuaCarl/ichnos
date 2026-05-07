@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Install Tools
+sudo apt-get install stress-ng
+sudo apt-get install turbostat
+sudo snap install go --channel=1.15/stable --classic
+
+git clone https://github.com/teads/turbostress.git
+cd turbostress
+go build cmd/main.go
+chown +x main
+cd ../
+
+chmod +x *.sh
+
+# Measure CPU + Memory
+$ ./measure-cpu.sh
+$ ./measure-memory.sh <node_memory>
+$ python FitPowerModels.py <node_name> <node_memory> <governor>

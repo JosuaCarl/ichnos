@@ -119,7 +119,7 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[datetime, Lis
 
     for node in unique_nodes: 
         node_power_models[node] = get_power_model_for_node(node, model_name)
-        node_memory_coeffs[node] = DEFAULT_MEMORY_POWER_DRAW  # get_memory_draw(node, model_name)
+        node_memory_coeffs[node] = get_memory_draw(node, model_name)
         node_system_cores[node] = get_system_cores(node)
         node_memory[node] = get_system_memory(node)
 
@@ -144,12 +144,6 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[datetime, Lis
             if isinstance(ci, float):
                 ci_val: float = ci
             else:
-                #hour_ts = to_timestamp(group_interval)
-                #hh: str = str(hour_ts.hour).zfill(2)
-                #month: str = str(hour_ts.month).zfill(2)
-                #day: str = str(hour_ts.day).zfill(2)
-                #mm: str = str(hour_ts.minute).zfill(2)
-                #ci_key: str = f'{month}/{day}-{hh}:{mm}'
                 ci_val = ci[intensity_key] 
             
             ###################
@@ -174,7 +168,7 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[datetime, Lis
             for task in tasks:
                 host = task.hostname
                 power_model = node_power_models[host][0]
-                memory_coefficient = DEFAULT_MEMORY_POWER_DRAW  # node_memory_coeffs[host]
+                memory_coefficient = node_memory_coeffs[host]
                 system_cores = node_system_cores[host]
                 energy_result = estimate_task_energy_consumption_ccf(task, power_model, model_name, memory_coefficient, system_cores)
                 energy_core, energy_mem = energy_result.core_consumption, energy_result.memory_consumption
@@ -231,7 +225,7 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[datetime, Lis
                 else:
                     static_energy[host] = energy
 
-                curr_energy = active_time_per_host[host] * DEFAULT_MEMORY_POWER_DRAW * node_memory[host] * 0.001   # convert from Wh to kWh
+                curr_energy = active_time_per_host[host] * node_memory_coeffs[host] * node_memory[host] * 0.001   # convert from Wh to kWh
                 static_memory_energy += curr_energy
                 static_memory_emissions += curr_energy * ci_val
 
