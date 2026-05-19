@@ -56,7 +56,7 @@ def write_trace_and_detailed_report(folder: str, trace_file: str, records: Itera
     # Aggregate duplicates
     aggregated: dict[str, ProcessedTrace] = {}
     for r in records:
-        tid = r.universal.id
+        tid = r.ichnos.id
         if tid in aggregated:
             existing = aggregated[tid]
             existing.average_co2e += r.average_co2e
@@ -71,7 +71,7 @@ def write_trace_and_detailed_report(folder: str, trace_file: str, records: Itera
     write_trace_file(folder, trace_file, rec_list)
     # Sorting helpers
     def runtime(pr: ProcessedTrace) -> float:
-        return (pr.universal.end - pr.universal.start) / 1000.0
+        return (pr.ichnos.end - pr.ichnos.start) / 1000.0
     rec_sorted_footprint = sorted(rec_list, key=lambda x: (-x.average_co2e, -runtime(x)))
     rec_sorted_marginal = sorted(rec_list, key=lambda x: (-x.marginal_co2e, -runtime(x)))
     try:
@@ -80,19 +80,19 @@ def write_trace_and_detailed_report(folder: str, trace_file: str, records: Itera
             file.write(f"{content}\n\n" if content else "")
             file.write("Top 10 Tasks - ranked by average CO2e then runtime:\n")
             for r in rec_sorted_footprint[:10]:
-                file.write(f"{r.universal.name}:{r.universal.id} average_co2e={r.average_co2e:.4f} runtime_s={runtime(r):.2f}\n")
+                file.write(f"{r.ichnos.name}:{r.ichnos.id} average_co2e={r.average_co2e:.4f} runtime_s={runtime(r):.2f}\n")
             file.write("\nTop 10 Tasks - ranked by marginal CO2e then runtime:\n")
             for r in rec_sorted_marginal[:10]:
-                file.write(f"{r.universal.name}:{r.universal.id} marginal_co2e={r.marginal_co2e:.4f} runtime_s={runtime(r):.2f}\n")
+                file.write(f"{r.ichnos.name}:{r.ichnos.id} marginal_co2e={r.marginal_co2e:.4f} runtime_s={runtime(r):.2f}\n")
             foot_top = rec_sorted_footprint[:10]
             marg_top = rec_sorted_marginal[:10]
-            marg_ids = {r.universal.id for r in marg_top}
-            diff_records = [r for r in foot_top if r.universal.id not in marg_ids]
+            marg_ids = {r.ichnos.id for r in marg_top}
+            diff_records = [r for r in foot_top if r.ichnos.id not in marg_ids]
             if not diff_records:
                 file.write("\nThe top 10 marginal CO2e tasks coincide with the top 10 average CO2e tasks.\n")
             else:
                 file.write("\nTasks in average CO2e top 10 but not marginal top 10:\n")
-                file.write(', '.join(f"{r.universal.name}:{r.universal.id}" for r in diff_records))
+                file.write(', '.join(f"{r.ichnos.name}:{r.ichnos.id}" for r in diff_records))
     except Exception as e:
         logging.error("Failed to write detailed report file %s: %s", output_file_name, e)
         raise

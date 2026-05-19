@@ -1,5 +1,5 @@
 from typing import Callable, Dict, List, Tuple, Union
-from src.models.UniversalTrace import UniversalTrace
+from src.models.IchnosTrace import IchnosTrace
 from src.models.ProcessedTrace import ProcessedTrace
 from src.models.TaskEnergyResult import TaskEnergyResult
 from src.models.OperationalCarbonResult import OperationalCarbonResult
@@ -14,7 +14,7 @@ from datetime import datetime
 import sys
 
 # find time when tasks are actively running
-def compute_active_time_per_host(tasks: List[UniversalTrace]) -> Dict[str, float]:
+def compute_active_time_per_host(tasks: List[IchnosTrace]) -> Dict[str, float]:
     tasks_by_host: Dict[str, List[Tuple[float, float]]] = {}
 
     for task in tasks:
@@ -50,12 +50,12 @@ def compute_active_time_per_host(tasks: List[UniversalTrace]) -> Dict[str, float
     return active_time_by_host
 
 
-# Estimate Energy Consumption (accept UniversalTrace)
-def estimate_task_energy_consumption_ccf(task: UniversalTrace, model: Callable[[float], float], model_name: str, memory_coefficient: float, system_cores: int) -> TaskEnergyResult:
+# Estimate Energy Consumption (accept IchnosTrace)
+def estimate_task_energy_consumption_ccf(task: IchnosTrace, model: Callable[[float], float], model_name: str, memory_coefficient: float, system_cores: int) -> TaskEnergyResult:
     """
     Estimate the energy consumptions for a task.
     
-    :param task: UniversalTrace task record.
+    :param task: IchnosTrace task record.
     :param model: Power model function.
     :param model_name: Name of the power model.
     :param memory_coefficient: Coefficient for memory power draw.
@@ -84,7 +84,7 @@ def estimate_task_energy_consumption_ccf(task: UniversalTrace, model: Callable[[
 
 
 # Estimate Carbon Footprint 
-def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[datetime, List[UniversalTrace]], ci: Union[float, Dict[str, float]], pue: float, model_name: str, memory_coefficient: float, unique_nodes: List[str], check_node_memory: bool = False, ewif: Union[float, Dict[str, float]]= None, wue: float = None, elif_: Union[float, Dict[str, float]] = None, lue: float = None ) -> OperationalCarbonResult:
+def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[datetime, List[IchnosTrace]], ci: Union[float, Dict[str, float]], pue: float, model_name: str, memory_coefficient: float, unique_nodes: List[str], check_node_memory: bool = False, ewif: Union[float, Dict[str, float]]= None, wue: float = None, elif_: Union[float, Dict[str, float]] = None, lue: float = None ) -> OperationalCarbonResult:
     """
     Calculate the carbon footprint using the CCF methodology.
     
@@ -125,6 +125,7 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[datetime, Lis
 
     static_energy = {}
     static_memory_energy = 0.0
+    static_memory_emissions = 0.0
     total_static_cpu_emissions: float = 0.0
 
     for group_interval, tasks in tasks_grouped_by_interval.items():
@@ -143,12 +144,6 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[datetime, Lis
             if isinstance(ci, float):
                 ci_val: float = ci
             else:
-                #hour_ts = to_timestamp(group_interval)
-                #hh: str = str(hour_ts.hour).zfill(2)
-                #month: str = str(hour_ts.month).zfill(2)
-                #day: str = str(hour_ts.day).zfill(2)
-                #mm: str = str(hour_ts.minute).zfill(2)
-                #ci_key: str = f'{month}/{day}-{hh}:{mm}'
                 ci_val = ci[intensity_key] 
             
             ###################
@@ -204,7 +199,9 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[datetime, Lis
                 ###################
 
                 records.append(ProcessedTrace(
-                    universal=task,
+                    ichnos=task,
+                    core_kwh=energy_core,
+                    mem_kwh=energy_mem,
                     average_co2e=task_footprint,
                     marginal_co2e=task_footprint,
                     embodied_co2e=0.0,
@@ -228,7 +225,9 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[datetime, Lis
                 else:
                     static_energy[host] = energy
 
-                static_memory_energy += active_time_per_host[host] * node_memory_coeffs[host] * node_memory[host] * 0.001  # convert from Wh to kWh
+                curr_energy = active_time_per_host[host] * node_memory_coeffs[host] * node_memory[host] * 0.001   # convert from Wh to kWh
+                static_memory_energy += curr_energy
+                static_memory_emissions += curr_energy * ci_val
 
             # static energy --> attribute to carbon emissions:
             total_static_cpu_emissions += interval_static_energy * ci_val
@@ -238,11 +237,12 @@ def calculate_carbon_footprint_ccf(tasks_grouped_by_interval: Dict[datetime, Lis
         cpu_energy_pue=total_energy_pue,
         memory_energy=total_memory_energy,
         memory_energy_pue=total_memory_energy_pue,
-        carbon_emissions=total_carbon_emissions, 
+        carbon_emissions=total_carbon_emissions + total_static_cpu_emissions, 
         water_emissions=total_water_emissions, # in Liters
         land_emissions=total_land_emissions, # in square meters
         static_cpu_energy_per_host=static_energy,
         static_mem_energy=static_memory_energy,
+        static_mem_emissions=static_memory_emissions,
         records=records
     )
 

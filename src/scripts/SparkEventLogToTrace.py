@@ -2,6 +2,7 @@
 
 # Imports
 from src.utils.Usage import print_usage_exit_SparkEventLogToTrace as print_usage_exit
+from src.utils.NodeConfigModelReader import get_system_cores
 
 import json
 import csv
@@ -83,35 +84,33 @@ def parse_spark_event_log(input_file_name: str, output_path: str) -> None:
                 launch_ms = task_info.get("Launch Time")
                 finish_ms = task_info.get("Finish Time")
 
+                # Map IP address to hostname if available
+                hostname = ip_to_hostname.get(host, host)
+
                 if None in (stage_id, task_id, launch_ms, finish_ms):
                     continue
 
                 duration_ms = finish_ms - launch_ms
-                duration_s = duration_ms / 1000.0
                 cpu_time_ns = task_metrics.get("Executor CPU Time", 0)
                 peak_mem = task_metrics.get("Peak Execution Memory", 0)
 
-                if duration_ms > 0:
-                    cpu_util_fraction = (cpu_time_ns / 1e6) / duration_ms
-                    avg_cpu_percent = round(cpu_util_fraction * 100, 2)
-                else:
-                    avg_cpu_percent = 0.0
+                cpu_time_ms = cpu_time_ns / 1e6
+                cpu_cores_usage = cpu_time_ms / duration_ms
 
-                start_unix = int(launch_ms / 1000)
-                end_unix = int(finish_ms / 1000)
+                node_total_cores = get_system_cores(hostname)
+                # cpu_util_fraction = (cpu_cores_usage / node_total_cores) if node_total_cores > 0 else 0.0
+                cpu_util_fraction = cpu_cores_usage # This is to match the nextflow trace format which uses 100% to mean fully utilizing 1 core, so 200% means fully utilizing 2 cores, etc.
+                avg_cpu_percent = round(cpu_util_fraction * 100, 2)
 
                 trace_id = f"{stage_id}_{task_id}"
                 name = f"stage_{stage_id}_task_{task_id}"
 
-                # Map IP address to hostname if available
-                hostname = ip_to_hostname.get(host, host)
-
                 writer.writerow([
                     trace_id,
                     name,
-                    start_unix,
-                    end_unix,
-                    1,                    # cpu_count
+                    launch_ms,
+                    finish_ms,
+                    node_total_cores,                    # cpu_count
                     avg_cpu_percent,
                     "",                   # cpu_model
                     peak_mem,

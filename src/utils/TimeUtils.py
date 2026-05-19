@@ -11,7 +11,7 @@ import logging
 from typing import List
 
 from src.models.TaskExtractionResult import TaskExtractionResult
-from src.models.UniversalTrace import UniversalTrace
+from src.models.IchnosTrace import IchnosTrace
 from src.models.TasksByTimeResult import TasksByTimeResult
 from src.Constants import FILE, DAY, MONTH, YEAR, HOUR, MINS
 from datetime import datetime
@@ -45,7 +45,7 @@ def to_timestamp_from_str(ts_str: str) -> datetime:
     stamp = datetime.strptime(ts_str, "%Y-%m-%dT%H:%MZ")
     return stamp.timestamp() * 1000
 
-def get_tasks_by_hour_with_overhead(start_hour: int, end_hour: int, tasks: List[UniversalTrace]) -> TasksByTimeResult:
+def get_tasks_by_hour_with_overhead(start_hour: int, end_hour: int, tasks: List[IchnosTrace]) -> TasksByTimeResult:
     """
     Group tasks by hour with additional overhead calculations.
 
@@ -98,7 +98,7 @@ def get_tasks_by_hour_with_overhead(start_hour: int, end_hour: int, tasks: List[
 
     return TasksByTimeResult(tasks_by_time=tasks_by_hour, overheads=overheads)
 
-def get_tasks_by_interval_with_overhead(start_interval: int, end_interval: int, tasks: List[UniversalTrace], interval: int) -> TasksByTimeResult:
+def get_tasks_by_interval_with_overhead(start_interval: int, end_interval: int, tasks: List[IchnosTrace], interval: int) -> TasksByTimeResult:
     """
     Group tasks by a user-defined interval with overhead calculations.
 
@@ -167,7 +167,7 @@ def to_closest_interval_ms(original: float, interval: int) -> int:
     return int(ts.timestamp() * 1000)
 
 
-def get_tasks_by_interval(trace_records: List[UniversalTrace], interval: int) -> TaskExtractionResult:
+def get_tasks_by_interval(trace_records: List[IchnosTrace], interval: int) -> TaskExtractionResult:
     """
     Extract tasks grouped by a specified interval from a list of tasks.
 
@@ -175,7 +175,7 @@ def get_tasks_by_interval(trace_records: List[UniversalTrace], interval: int) ->
     :param interval: Interval in minutes.
     :return: A TaskExtractionResult object containing tasks grouped by interval and all tasks.
     """
-    carbon_records = trace_records  # now already universal traces
+    carbon_records = trace_records  # now already ichnos traces
     if not carbon_records:
         return TaskExtractionResult(tasks_by_interval={}, all_tasks=[], workflow_start=0, workflow_end=0, overhead_intervals=[])
 
@@ -204,12 +204,12 @@ def extract_tasks_by_interval(filename: str, interval: int) -> TaskExtractionRes
     """
     if len(filename.split(".")) > 1:
         filename = filename.split(".")[-2]
-    from src.utils.Parsers import parse_universal_trace_file  # local import to avoid cycles
-    trace_path_universal = f"data/universal_traces/{filename}.{FILE}"
+    from src.utils.Parsers import parse_ichnos_trace_file  # local import to avoid cycles
+    trace_path_ichnos = f"data/ichnos_traces/{filename}.{FILE}"
     try:
-        trace_records = parse_universal_trace_file(trace_path_universal)
+        trace_records = parse_ichnos_trace_file(trace_path_ichnos)
     except Exception as e2:
-        logging.error("Failed to parse universal trace file %s: %s", trace_path_universal, e2)
+        logging.error("Failed to parse ichnos trace file %s: %s", trace_path_ichnos, e2)
         trace_records = []
     return get_tasks_by_interval(trace_records, interval)
 

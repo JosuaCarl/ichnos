@@ -5,7 +5,7 @@ apply temporal shifting based on carbon intensity, and generate corresponding re
 """
 
 # New models
-from src.models.UniversalTrace import UniversalTrace
+from src.models.IchnosTrace import IchnosTrace
 from src.models.ProcessedTrace import ProcessedTrace
 from src.models.TaskExtractionResult import TaskExtractionResult
 from src.models.TempShiftResult import TempShiftResult
@@ -41,7 +41,7 @@ def explore_temporal_shifting_for_workflow(workflow: str, task_extraction_result
     overhead_intervals = task_extraction_result.overhead_intervals
 
     # Calculate total time of workflow from trace records
-    trace_records = task_extraction_result.all_tasks  # List[UniversalTrace]
+    trace_records = task_extraction_result.all_tasks  # List[IchnosTrace]
     cpu_model = trace_records[0].cpu_model if trace_records else ''
     # Check if all trace records have the same CPU model
     if trace_records:
@@ -53,7 +53,7 @@ def explore_temporal_shifting_for_workflow(workflow: str, task_extraction_result
     # Identify Hours in Order
     intervals_by_key = {}
 
-    for interval, tasks in tasks_by_interval.items():  # tasks: List[UniversalTrace]
+    for interval, tasks in tasks_by_interval.items():  # tasks: List[IchnosTrace]
         if len(tasks) > 0:
             hour_ts = to_timestamp(interval)
             month = str(hour_ts.month).zfill(2)
