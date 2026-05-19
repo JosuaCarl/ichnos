@@ -1,14 +1,14 @@
 {
 	"ramses": {
-		"tdp_per_core": 7.03125,
+		"tdp_per_core": 3.515625,
 		"system_cores": 64,
 		"cpu_model": "AMD EPYC 7543P 32-Core Processor",
 		"memory": 128,
 		"default": {
 			"mem_draw": 0.392,
-			"min_watts": 75.52666666666667,
-			"max_watts": 220.81000000000003,
-			"linear": [ 1.3027060606060608, 91.45954545454548 ],
+			"min_watts": 42.72666666666667,
+			"max_watts": 188.98666666666668,
+			"linear": [ 1.185066666666667, 66.44757575757576 ],
 			"quadratic": [-0.01, 4.01, 50.01]
 		}
 	},
@@ -19,14 +19,14 @@
 		"cpu_model": "Intel(R) Xeon(R) CPU E5-1650 v2 @ 3.50GHz",
 		"memory": 128,
 		"default": {
-			"mem_draw": 9.950666666666666e-08,
+			"mem_draw": 0.09764322916666666,
 			"min_watts": 6.863333333333333,
-			"max_watts": 81.95666666666666,
-			"linear": [ 0.5655212121212121, 33.92606060606062 ],
+			"max_watts": 83.42333333333333,
+			"linear": [ 0.6094606060606059, 32.607878787878796 ],
 			"quadratic": [0, 0, 0]
 		}
 	},
-    
+
 	"thanos": {
 		"tdp_per_core": 7.8125,
 		"system_cores": 64,
